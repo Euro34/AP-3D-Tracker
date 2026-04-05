@@ -5,12 +5,12 @@ Color Palette & Font Size
 --------------------------------------*/
 :root {
 	--text-color: #d3d3d3;
-	--accent1-color:  #5baa61;
-	--accent2-color: #5a9e72;
-	--primary-color: #465346;
-	--secondary-color: #2f3d2f;
-	--primary-background-color: #161e17;
-	--secondary-background-color: #1f2820;
+	--accent1-color:  #e4a7e7;
+	--accent2-color: #e7b1ea;
+	--primary-color: #282328;
+	--secondary-color: #3c383c;
+	--primary-background-color: #171717;
+	--secondary-background-color: #2c2c2c;
 
 	--text-xl: 1.875rem;
 	--text-l: 1.5rem;
