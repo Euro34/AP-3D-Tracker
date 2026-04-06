@@ -20,6 +20,7 @@
         <link rel="stylesheet" href="src/assets/css/workflow.css">
         <link rel="stylesheet" href="src/assets/css/card_container.css">
         <link rel="stylesheet" href="src/assets/css/upload.css">
+        <link rel="stylesheet" href="src/assets/css/reference_object_dimension.css">
 
         <!-- Title -->
         <title>AP Tracker</title>
@@ -142,11 +143,24 @@
                             <h3 class="card-title">Reference object dimensions</h3>
                         </div>
                         <div class="right">
-
                         </div>
                     </div>
                     <div class="card-content">
-                        
+                        <div class="input-container">
+                            <div class="input-group">
+                                <p for="ref-width">Width (x):</p>
+                                <input type="number" id="ref-width" placeholder="Enter width">
+                            </div>
+                            <div class="input-group">
+                                <p for="ref-length">Length (y):</p>
+                                <input type="number" id="ref-length" placeholder="Enter length">
+                            </div>
+                            <div class="input-group">
+                                <p for="ref-height">Height (z):</p>
+                                <input type="number" id="ref-height" placeholder="Enter height">
+                            </div>
+                        </div> 
+                        <div id="refObjDiagram"></div>
                     </div>
                 </div>
                 <div class="card" id="RefCorner">
@@ -218,5 +232,6 @@
     <footer>
         <script type="module" src="/src/UI/workflow.ts"></script>
         <script type="module" src="/src/UI/upload.ts"></script>
+        <script type="module" src="/src/UI/reference_object_dimension.ts"></script>
     </footer>
 </html>

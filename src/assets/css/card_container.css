@@ -37,7 +37,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 26px;
+    width: 28px;
     height: 22px;
     border-width: 2px;
     border-style: solid;
@@ -53,12 +53,6 @@
 
 .card.inprogress .card-number {
     border-color: var(--warning-color);
-}
-
-.card-content {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
 }
 
 .card.final {

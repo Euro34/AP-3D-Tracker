@@ -1,3 +1,9 @@
+.card#Upload .card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
 .upload-area {
     display: flex;
     justify-content: center;

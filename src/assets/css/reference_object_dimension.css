@@ -1,0 +1,51 @@
+.card#RefDim .card-content {
+    display: flex;
+    gap: 10px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.input-container {
+    display: grid;
+    align-content: center;
+    grid-template-columns: repeat(3, 1fr);
+    width: calc(50% - 5px);
+    gap: 10px
+}
+
+.input-group input {
+    width: 100%; 
+    padding: 7px 32px 7px 10px; 
+    border: 0.5px solid var(--border-color); 
+    border-radius: 5px; 
+    outline: none;
+    background: var(--color-background-secondary); 
+    color: var(--color-text-primary); 
+    font-size: 13px; 
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+/* Firefox */
+input[type=number] {
+  appearance: textfield;
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+#refObjDiagram {
+    overflow: hidden;
+    width: calc(50% - 5px);
+    height: auto;
+    border: 0.5px solid var(--border-color); 
+    border-radius: 15px;
+    aspect-ratio: 16/9;
+}

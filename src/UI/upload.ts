@@ -1,5 +1,6 @@
-import {updateStatus} from "./workflow.ts"
-import { uploadedVideos } from "../main.ts";
+import { updateStatus } from "./workflow.ts"
+
+export let uploadedVideos: File[] = [];
 
 const uploadArea = document.getElementById("upload-area") as HTMLDivElement;
 const previewGrid = document.getElementById("preview-grid") as HTMLDivElement;
@@ -78,8 +79,7 @@ function render(): void {
         video.src = objectURL;
         video.muted = true;
 
-        // video.currentTime = 0.01;
-        video.load(); // explicitly kick off loading
+        video.load();
         const filename = document.createElement("div");
         filename.className = "filename";
         filename.textContent = file.name;
