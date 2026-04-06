@@ -1,4 +1,4 @@
-import { Point_3D, Point_2D } from './Types.ts';
+import { Point_3D, Point_2D } from './Types';
 import { Matrix, SingularValueDecomposition } from 'ml-matrix';
 
 export class ReferenceObject {

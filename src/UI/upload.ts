@@ -1,4 +1,4 @@
-import { updateStatus } from "./workflow.ts"
+import { updateStatus } from "./workflow"
 
 export let uploadedVideos: File[] = [];
 
