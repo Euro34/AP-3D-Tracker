@@ -7,6 +7,8 @@ Color Palette & Font Size
 	--text1-color: #f0f0f0;
     --text2-color: #a4a4a4;
 	--accent1-color:  #999999;
+	--accent2-color: #3bbb8e;
+	--accent3-color: #3bbb8e49;
 	--background1-color: #171717;
 	--background2-color: #2c2c2c;
     --background3-color: #232323;
@@ -15,7 +17,11 @@ Color Palette & Font Size
     --success-color: #22946e;
     --warning-color: #c48d2f;
     --danger-color: #d94a4a;
-    --inprogress-color: #21498a;
+
+    --info-color: #21498a;
+
+	--link-color: #bcd9f8;
+	--link-border-color: #347ecd;
 
 	--text-xl: 1.875rem;
 	--text-l: 1.5rem;

@@ -26,6 +26,7 @@
     border-radius: 50%;
     background-color: var(--accent1-color);
     color: var(--text1-color);
+    transition: background-color 0.3s ease;
 }
 
 .step.done .step-num {
@@ -39,6 +40,7 @@
 .step-text {
     display: flex;
     flex-direction: column;
+    width: calc(100% - 40px);
     padding: 3px 0;
     gap :10px;
 }

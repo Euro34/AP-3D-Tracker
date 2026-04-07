@@ -1,6 +1,6 @@
-import { updateStatus } from "./workflow"
+import { apTracker } from "../main";
 
-export let uploadedVideos: File[] = [];
+let uploadedVideos: File[] = [];
 
 const uploadArea = document.getElementById("upload-area") as HTMLDivElement;
 const previewGrid = document.getElementById("preview-grid") as HTMLDivElement;
@@ -35,6 +35,7 @@ function handleNewFiles(newFiles: File[]): void {
     const videoFiles = newFiles.filter((f) => f.type.startsWith("video/"));
     const slots = 2 - uploadedVideos.length;
     uploadedVideos.push(...videoFiles.slice(0, slots));
+    apTracker.updateVideos(uploadedVideos);
     render();
 }
 
@@ -45,6 +46,7 @@ function removeFile(index: number): void {
     if (video?.src) URL.revokeObjectURL(video.src);
 
     uploadedVideos.splice(index, 1);
+    apTracker.updateVideos(uploadedVideos);
     render();
 }
 
@@ -57,12 +59,8 @@ function render(): void {
 
     if (count === 0) {
         uploadArea.querySelector("p")!.textContent ="Click or drag and drop to upload videos";
-        updateStatus("Upload", "");
     } else if (count === 1) {
         uploadArea.querySelector("p")!.textContent = "Click or drag and drop to upload the second video";
-        updateStatus("Upload", "inprogress");
-    } else if (count === 2) {
-        updateStatus("Upload", "done");
     }
 
     // Clear existing thumbnails

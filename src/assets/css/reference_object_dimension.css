@@ -3,6 +3,12 @@
     gap: 10px;
 }
 
+.card#RefDim .card-header .right {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+}
+
 .input-group {
     display: flex;
     flex-direction: column;
@@ -25,7 +31,7 @@
     outline: none;
     background: var(--color-background-secondary); 
     color: var(--color-text-primary); 
-    font-size: 13px; 
+    font-size: var(--text-xxs); 
 }
 
 input::-webkit-outer-spin-button,

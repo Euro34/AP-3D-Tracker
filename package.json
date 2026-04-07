@@ -14,6 +14,8 @@
     "vite": "^8.0.1"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "ml-matrix": "^6.12.1",
     "three": "^0.183.2"
   }

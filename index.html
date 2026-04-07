@@ -20,6 +20,7 @@
         <link rel="stylesheet" href="src/assets/css/workflow.css">
         <link rel="stylesheet" href="src/assets/css/card_container.css">
         <link rel="stylesheet" href="src/assets/css/upload.css">
+        <link rel="stylesheet" href="src/assets/css/sync.css">
         <link rel="stylesheet" href="src/assets/css/reference_object_dimension.css">
 
         <!-- Title -->
@@ -52,7 +53,7 @@
                     <div class="step-num">2</div>
                     <div class="step-text">
                         <h4 class="step-title">Sync & trim</h4>
-                        <p class="step-desc">Sync and trim both video to the same time</p>
+                        <p class="step-desc">Sync and trim both video to start at the same time</p>
                     </div>
                 </div>
                 <div class="connector"></div>
@@ -97,7 +98,7 @@
                 </div>
                 <div class="progress">
                     <p>Progression</p>
-                    <div class="progress-label" id="progress-label"></div>
+                    <div class="progress-label" id="progress-label">0/7</div>
                     <div class="progress-bar" id="progress-bar">
                         <div class="progress-fill"></div>
                     </div>
@@ -129,11 +130,64 @@
                             <h3 class="card-title">Sync & trim</h3>
                         </div>
                         <div class="right">
-
+                            <button id="open-sync-editor">Open Sync Editor</button>
                         </div>
                     </div>
                     <div class="card-content">
-                        
+                        <div class="cam-container">
+                            <div class="cam">
+                                Camera A
+                                <div class="data-container">
+                                    <div class="info" id="Duration-A">
+                                        <p class="header">Duration</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">s</p>
+                                        </div>
+                                    </div>
+                                    <div class="info" id="FrameRate-A">
+                                        <p class="header">Frame rate</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">fps</p>
+                                        </div>
+                                    </div>
+                                    <div class="info" id="StartTime-A">
+                                        <p class="header">Start time</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">s</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="cam">
+                                Camera B
+                                <div class="data-container">
+                                    <div class="info" id="Duration-B">
+                                        <p class="header">Duration</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">s</p>
+                                        </div>
+                                    </div>
+                                    <div class="info" id="FrameRate-B">
+                                        <p class="header">Frame rate</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">fps</p>
+                                        </div>
+                                    </div>
+                                    <div class="info" id="StartTime-B">
+                                        <p class="header">Start time</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">s</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="card" id="RefDim">
@@ -143,6 +197,9 @@
                             <h3 class="card-title">Reference object dimensions</h3>
                         </div>
                         <div class="right">
+                            <p>x = red</p>
+                            <p>y = green</p>
+                            <p>z = blue</p>
                         </div>
                     </div>
                     <div class="card-content">
@@ -217,9 +274,9 @@
                     </div>
                     <div class="container">
                         <div class="button-cluster">
-                            <button id="calculate">Calculate</button>
-                            <button id="export"><img src="src/assets/glyph/download.svg" alt=""> Export CSV</button>
-                            <button id="visualize"><img src="src/assets/glyph/globe.svg" alt="">Visualize</button>
+                            <button class="locked" id="calculate">Calculate</button>
+                            <button class="locked" id="export"><img src="src/assets/glyph/download.svg" alt="">Export CSV</button>
+                            <button class="locked" id="visualize"><img src="src/assets/glyph/globe.svg" alt="">Visualize</button>
                         </div>
                         <div class="description" id="description">
                             <strong>Current step:</strong> Description of the current step. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec auctor, nisl eget ultricies lacinia, nunc nisl aliquam nisl.
@@ -229,9 +286,112 @@
             </div>
         </div>
     </body>
+
+    <!-- Sync Editor -->
+    <div class="SyncEditor" id="SyncEditor">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <img id="logo" src="AP_Logo.svg" alt="AP Tracker Logo">
+                <h1>Sync Editor</h1>
+            </div>
+            <div class="toolbar-right">
+                <button id="close-sync-editor"><img src="src/assets/glyph/cross.svg" alt="Close"></button>
+            </div>
+        </div>
+        <div class="content">
+            <div class="video-container">
+                <div class="video" id="video-A">
+                    <div class="video-label">No video loaded</div>
+                    <video preload="metadata"></video>
+                    <div class="empty-video">No video</div>
+                </div>
+                <div class="video" id="video-B">
+                    <div class="video-label">No video loaded</div>
+                    <video preload="metadata"></video>
+                    <div class="empty-video">No video</div>
+                </div>
+            </div>
+            <div class="player-controls">
+                <div class="player" id="player-A">
+                    <button class="to-start">⏮</button>
+                    <button class="play">▶ A</button>
+                    <button class="to-end">⏭</button>
+                </div>
+                <div class="player" id="player-Both">
+                    <button class="to-start">⏮</button>
+                    <button class="play">▶ Both</button>
+                    <button class="to-end">⏭</button>
+                </div>
+                <div class="player" id="player-B">
+                    <button class="to-start">⏮</button>
+                    <button class="play">▶ B</button>
+                    <button class="to-end">⏭</button>
+                </div>
+            </div>
+            <div class="trim-header">Trim</div>
+            <div class="trim-controls">
+                <div class="trim-control" id="trim-A">
+                    Start
+                    <div class="control">
+                        <button>‹</button>
+                        00:00:00
+                        <button>›</button>
+                    </div>
+                    End
+                    <div class="control">
+                        <button>‹</button>
+                        00:00:00
+                        <button>›</button>
+                    </div>
+                    <div class="trim-track">
+                        <div class="trim-selection" style="--start: 0%; --end: 80%;">
+                            <div class="handle handle-left"></div>
+                            <div class="handle handle-right"></div>
+                        </div>
+                        <div class="playhead" style="--pos: 50%;"></div>
+                    </div>
+                    <div>
+
+                    </div>
+                </div>
+                <div class="divider">
+                    <div class="line"></div>
+                    <div class="link-unlink">
+                        <img src="src/assets/glyph/link.svg" alt="Link">
+                        <!-- <img src="src/assets/glyph/unlink.svg" alt="Unlink"> -->
+                    </div>
+                    <div class="line"></div>
+                </div>
+                <div class="trim-control" id="trim-B">
+                    Start
+                    <div class="control">
+                        <button>‹</button>
+                        00:00:00
+                        <button>›</button>
+                    </div>
+                    End
+                    <div class="control">
+                        <button>‹</button>
+                        00:00:00
+                        <button>›</button>
+                    </div>
+                    <div class="trim-track">
+                        <div class="trim-selection" style="--start: 0%; --end: 100%;">
+                            <div class="handle handle-left"></div>
+                            <div class="handle handle-right"></div>
+                        </div>
+                        <div class="playhead" style="--pos: 85%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <footer>
         <script type="module" src="/src/UI/workflow.ts"></script>
         <script type="module" src="/src/UI/upload.ts"></script>
+        <script type="module" src="/src/UI/sync.ts"></script>
         <script type="module" src="/src/UI/reference_object_dimension.ts"></script>
     </footer>
 </html>

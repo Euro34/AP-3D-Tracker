@@ -44,6 +44,7 @@
     border-color: var(--accent1-color);
     border-radius:11px;
     color: var(--text1-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .card.done .card-number {
@@ -79,6 +80,7 @@
     border-color: var(--border-color);
     border-radius: 10px;
     gap: 10px;
+    transition: border-color 0.3s ease;
 }
 
 .statuses .item.done {
@@ -94,6 +96,7 @@
     height: 7px;
     border-radius: 50%;
     background-color: var(--accent1-color);
+    transition: background-color 0.3s ease;
 }
 
 .statuses .item.done .dot {
@@ -137,6 +140,11 @@
     width: 16px;
     height: 16px;
     filter: invert(60%)
+}
+
+.button-cluster button.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .button-cluster #visualize {
