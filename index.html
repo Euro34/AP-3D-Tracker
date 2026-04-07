@@ -18,8 +18,8 @@
 
         <!-- Title -->
         <title>AP Tracker</title>
-      <script type="module" crossorigin src="/APTracker/assets/index-CwoAlkQX.js"></script>
-      <link rel="stylesheet" crossorigin href="/APTracker/assets/index-CUQnBhoH.css">
+      <script type="module" crossorigin src="/APTracker/assets/index-Bn1edWWG.js"></script>
+      <link rel="stylesheet" crossorigin href="/APTracker/assets/index-BDMPGUcd.css">
     </head>
     <body>
         <div class="toolbar">
@@ -48,7 +48,7 @@
                     <div class="step-num">2</div>
                     <div class="step-text">
                         <h4 class="step-title">Sync & trim</h4>
-                        <p class="step-desc">Sync and trim both video to the same time</p>
+                        <p class="step-desc">Sync and trim both video to start at the same time</p>
                     </div>
                 </div>
                 <div class="connector"></div>
@@ -93,7 +93,7 @@
                 </div>
                 <div class="progress">
                     <p>Progression</p>
-                    <div class="progress-label" id="progress-label"></div>
+                    <div class="progress-label" id="progress-label">0/7</div>
                     <div class="progress-bar" id="progress-bar">
                         <div class="progress-fill"></div>
                     </div>
@@ -125,11 +125,64 @@
                             <h3 class="card-title">Sync & trim</h3>
                         </div>
                         <div class="right">
-
+                            <button id="open-sync-editor">Open Sync Editor</button>
                         </div>
                     </div>
                     <div class="card-content">
-                        
+                        <div class="cam-container">
+                            <div class="cam">
+                                Camera A
+                                <div class="data-container">
+                                    <div class="info" id="Duration-A">
+                                        <p class="header">Duration</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">s</p>
+                                        </div>
+                                    </div>
+                                    <div class="info" id="FrameRate-A">
+                                        <p class="header">Frame rate</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">fps</p>
+                                        </div>
+                                    </div>
+                                    <div class="info" id="StartTime-A">
+                                        <p class="header">Start time</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">s</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="cam">
+                                Camera B
+                                <div class="data-container">
+                                    <div class="info" id="Duration-B">
+                                        <p class="header">Duration</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">s</p>
+                                        </div>
+                                    </div>
+                                    <div class="info" id="FrameRate-B">
+                                        <p class="header">Frame rate</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">fps</p>
+                                        </div>
+                                    </div>
+                                    <div class="info" id="StartTime-B">
+                                        <p class="header">Start time</p>
+                                        <div class="value-unit">
+                                            <p class="value">-</p>
+                                            <p class="unit">s</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="card" id="RefDim">
@@ -139,6 +192,9 @@
                             <h3 class="card-title">Reference object dimensions</h3>
                         </div>
                         <div class="right">
+                            <p>x = red</p>
+                            <p>y = green</p>
+                            <p>z = blue</p>
                         </div>
                     </div>
                     <div class="card-content">
@@ -213,9 +269,9 @@
                     </div>
                     <div class="container">
                         <div class="button-cluster">
-                            <button id="calculate">Calculate</button>
-                            <button id="export"><img src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20fill='%23000000'%20width='800px'%20height='800px'%20viewBox='0%200%2024%2024'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M4,20H20a1,1,0,0,1,0,2H4a1,1,0,0,1,0-2ZM12,2a1,1,0,0,0-1,1V14.586L8.707,12.293a1,1,0,1,0-1.414,1.414l4,4a1,1,0,0,0,.325.216.986.986,0,0,0,.764,0,1,1,0,0,0,.325-.216l4-4a1,1,0,0,0-1.414-1.414L13,14.586V3A1,1,0,0,0,12,2Z'/%3e%3c/svg%3e" alt=""> Export CSV</button>
-                            <button id="visualize"><img src="/APTracker/assets/globe-CYeG1keH.svg" alt="">Visualize</button>
+                            <button class="locked" id="calculate">Calculate</button>
+                            <button class="locked" id="export"><img src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20fill='%23000000'%20width='800px'%20height='800px'%20viewBox='0%200%2024%2024'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M4,20H20a1,1,0,0,1,0,2H4a1,1,0,0,1,0-2ZM12,2a1,1,0,0,0-1,1V14.586L8.707,12.293a1,1,0,1,0-1.414,1.414l4,4a1,1,0,0,0,.325.216.986.986,0,0,0,.764,0,1,1,0,0,0,.325-.216l4-4a1,1,0,0,0-1.414-1.414L13,14.586V3A1,1,0,0,0,12,2Z'/%3e%3c/svg%3e" alt="">Export CSV</button>
+                            <button class="locked" id="visualize"><img src="/APTracker/assets/globe-CYeG1keH.svg" alt="">Visualize</button>
                         </div>
                         <div class="description" id="description">
                             <strong>Current step:</strong> Description of the current step. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec auctor, nisl eget ultricies lacinia, nunc nisl aliquam nisl.
@@ -225,6 +281,108 @@
             </div>
         </div>
     </body>
+
+    <!-- Sync Editor -->
+    <div class="SyncEditor" id="SyncEditor">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <img id="logo" src="AP_Logo.svg" alt="AP Tracker Logo">
+                <h1>Sync Editor</h1>
+            </div>
+            <div class="toolbar-right">
+                <button id="close-sync-editor"><img src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20width='800px'%20height='800px'%20viewBox='0%200%2024%2024'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M19%205L4.99998%2019M5.00001%205L19%2019'%20stroke='%23000000'%20stroke-width='1.5'%20stroke-linecap='round'%20stroke-linejoin='round'/%3e%3c/svg%3e" alt="Close"></button>
+            </div>
+        </div>
+        <div class="content">
+            <div class="video-container">
+                <div class="video" id="video-A">
+                    <div class="video-label">No video loaded</div>
+                    <video preload="metadata"></video>
+                    <div class="empty-video">No video</div>
+                </div>
+                <div class="video" id="video-B">
+                    <div class="video-label">No video loaded</div>
+                    <video preload="metadata"></video>
+                    <div class="empty-video">No video</div>
+                </div>
+            </div>
+            <div class="player-controls">
+                <div class="player" id="player-A">
+                    <button class="to-start">⏮</button>
+                    <button class="play">▶ A</button>
+                    <button class="to-end">⏭</button>
+                </div>
+                <div class="player" id="player-Both">
+                    <button class="to-start">⏮</button>
+                    <button class="play">▶ Both</button>
+                    <button class="to-end">⏭</button>
+                </div>
+                <div class="player" id="player-B">
+                    <button class="to-start">⏮</button>
+                    <button class="play">▶ B</button>
+                    <button class="to-end">⏭</button>
+                </div>
+            </div>
+            <div class="trim-header">Trim</div>
+            <div class="trim-controls">
+                <div class="trim-control" id="trim-A">
+                    Start
+                    <div class="control">
+                        <button>‹</button>
+                        00:00:00
+                        <button>›</button>
+                    </div>
+                    End
+                    <div class="control">
+                        <button>‹</button>
+                        00:00:00
+                        <button>›</button>
+                    </div>
+                    <div class="trim-track">
+                        <div class="trim-selection" style="--start: 0%; --end: 80%;">
+                            <div class="handle handle-left"></div>
+                            <div class="handle handle-right"></div>
+                        </div>
+                        <div class="playhead" style="--pos: 50%;"></div>
+                    </div>
+                    <div>
+
+                    </div>
+                </div>
+                <div class="divider">
+                    <div class="line"></div>
+                    <div class="link-unlink">
+                        <img src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='UTF-8'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20width='100%25'%20height='100%25'%20viewBox='0%200%20800%20800'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20xml:space='preserve'%20xmlns:serif='http://www.serif.com/'%20style='fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;'%3e%3cg%20transform='matrix(33.333333,0,0,33.333333,0,0)'%3e%3cpath%20d='M16.243,12L19.071,9.172C19.071,9.172%2020.485,7.757%2018.364,5.636C16.243,3.515%2014.829,4.929%2014.829,4.929C14.829,4.929%2012.707,7.05%2011.293,8.464C9.879,9.879%209.879,11.293%2010.586,12'%20style='fill:none;fill-rule:nonzero;stroke:black;stroke-width:1px;'/%3e%3cpath%20d='M7.757,12L4.929,14.828C4.929,14.828%203.515,16.243%205.636,18.364C7.757,20.485%209.172,19.071%209.172,19.071C9.172,19.071%2010.939,17.303%2012.354,15.889C13.768,14.475%2014.121,12.707%2013.414,12'%20style='fill:none;fill-rule:nonzero;stroke:black;stroke-width:1px;'/%3e%3c/g%3e%3c/svg%3e" alt="Link">
+                        <!-- <img src="src/assets/glyph/unlink.svg" alt="Unlink"> -->
+                    </div>
+                    <div class="line"></div>
+                </div>
+                <div class="trim-control" id="trim-B">
+                    Start
+                    <div class="control">
+                        <button>‹</button>
+                        00:00:00
+                        <button>›</button>
+                    </div>
+                    End
+                    <div class="control">
+                        <button>‹</button>
+                        00:00:00
+                        <button>›</button>
+                    </div>
+                    <div class="trim-track">
+                        <div class="trim-selection" style="--start: 0%; --end: 100%;">
+                            <div class="handle handle-left"></div>
+                            <div class="handle handle-right"></div>
+                        </div>
+                        <div class="playhead" style="--pos: 85%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <footer>
     </footer>
 </html>
