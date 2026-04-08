@@ -1,75 +1,102 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 
-/**
- * Extracts all frame timestamps from a single video file using ffmpeg.wasm.
- * Runs ffmpeg with `-vf fps=...` probe to get frame timestamps via ffprobe-style output.
- */
-async function extractFrameTimestamps(
-	ffmpeg: FFmpeg,
-	file: File
-): Promise<number[]> {
-	const inputName = `input_${file.name}`;
+// Singleton instance to avoid reloading FFmpeg multiple times
+let ffmpegInstance: FFmpeg | null = null;
 
-	await ffmpeg.writeFile(inputName, await fetchFile(file));
+// Cache to store results: Key is "filename-size", Value is timestamp array
+class TimestampCache {
+    private cache = new Map<string, number[]>();
+    private readonly maxEntries: number;
 
-	const timestamps: number[] = [];
-	const logLines: string[] = [];
+    constructor(maxEntries = 10) {
+        this.maxEntries = maxEntries;
+    }
 
-	// Capture ffmpeg stderr output
-	ffmpeg.on("log", ({ message }) => {
-		logLines.push(message);
-	});
+    get(key: string): number[] | undefined {
+        if (!this.cache.has(key)) return undefined;
 
-	// Use showinfo filter to print per-frame pts_time to log
-	await ffmpeg.exec([
-		"-i", inputName,
-		"-vf", "showinfo",
-		"-f", "null",
-		"-",
-	]);
+        // Refresh the item: delete and re-insert so it's "newest"
+        const value = this.cache.get(key)!;
+        this.cache.delete(key);
+        this.cache.set(key, value);
+        return value;
+    }
 
-	// Parse "pts_time:<value>" from showinfo output
-	for (const line of logLines) {
-		const match = line.match(/pts_time:([\d.]+)/);
-		if (match) {
-			timestamps.push(parseFloat(match[1]));
-		}
-	}
-
-	await ffmpeg.deleteFile(inputName);
-
-	return timestamps;
+    set(key: string, value: number[]): void {
+        // If key exists, delete it first to update its position
+        if (this.cache.has(key)) {
+            this.cache.delete(key);
+        } else if (this.cache.size >= this.maxEntries) {
+            // Map maintains insertion order, so the first key is the oldest
+            const oldestKey = this.cache.keys().next().value;
+            if (oldestKey !== undefined) {
+                this.cache.delete(oldestKey);
+            }
+        }
+        this.cache.set(key, value);
+    }
 }
 
-/**
- * Loads ffmpeg.wasm (single-thread build for GitHub Pages compatibility).
- * Call once and reuse the instance.
- */
-async function loadFFmpeg(): Promise<FFmpeg> {
-	const ffmpeg = new FFmpeg();
+// Initialize with a reasonable limit (e.g., 20 videos)
+const timestampCache = new TimestampCache(20);
 
-    await ffmpeg.load();
-
-	return ffmpeg;
+async function getFFmpeg(): Promise<FFmpeg> {
+    if (ffmpegInstance) return ffmpegInstance;
+    
+    ffmpegInstance = new FFmpeg();
+    await ffmpegInstance.load();
+    return ffmpegInstance;
 }
 
-/**
- * Accepts a list of 0–2 video files.
- * Returns [[timestamps_vid1], [timestamps_vid2]], [[timestamps_vid1]], or [].
- */
+async function extractFrameTimestamps(ffmpeg: FFmpeg, file: File): Promise<number[]> {
+    // Generate a semi-unique key for the cache
+    const cacheKey = `${file.name}-${file.size}`;
+    if (timestampCache.get(cacheKey)) {
+        return timestampCache.get(cacheKey)!;
+    }
+
+    const inputName = `input_${file.name}`;
+    await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+    const timestamps: number[] = [];
+    
+    // Use a scoped log listener to avoid mixing logs from different files
+    const logHandler = ({ message }: { message: string }) => {
+        const match = message.match(/pts_time:([\d.]+)/);
+        if (match) {
+            timestamps.push(parseFloat(match[1]));
+        }
+    };
+
+    ffmpeg.on("log", logHandler);
+
+    await ffmpeg.exec([
+        "-i", inputName,
+        "-vf", "showinfo",
+        "-f", "null",
+        "-",
+    ]);
+
+    // Cleanup: remove listener and delete virtual file
+    ffmpeg.off("log", logHandler);
+    await ffmpeg.deleteFile(inputName);
+
+    // Save to cache
+    timestampCache.set(cacheKey, timestamps);
+    return timestamps;
+}
+
 export async function extractAllFrameTimestamps(files: File[]): Promise<number[][]> {
-	if (files.length === 0) {
-		return [];
-	}
+    if (files.length === 0) return [];
 
-	const ffmpeg = await loadFFmpeg();
+    const ffmpeg = await getFFmpeg();
+    const results: number[][] = [];
 
-	const results: number[][] = [];
-	for (const file of files) {
-		const timestamps = await extractFrameTimestamps(ffmpeg, file);
-		results.push(timestamps);
-	}
+    for (const file of files) {
+        const timestamps = await extractFrameTimestamps(ffmpeg, file);
+        results.push(timestamps);
+    }
 
-	return results;
+    return results;
 }

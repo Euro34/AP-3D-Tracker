@@ -77,6 +77,7 @@ function render(): void {
         video.src = objectURL;
         video.muted = true;
 
+        video.currentTime = 0.01;
         video.load();
         const filename = document.createElement("div");
         filename.className = "filename";
