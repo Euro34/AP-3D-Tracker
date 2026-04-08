@@ -2,10 +2,11 @@
 import { ReferenceObject } from "./core/ReferenceObject";
 
 import { updateStatus } from "./UI/workflow";
-// import { updateVideosInfo } from "./UI/sync";
+import { extractAllFrameTimestamps } from "./core/ExtractFrame";
 
 class APTracker {
     uploadedVideos: File[] = [];
+    frameTimestamps: number[][] = [];
     sync: number[] | null = null; // [start1, end1, offsets(start2-start1)]
     referenceObject: ReferenceObject | null = null;
 
@@ -17,6 +18,17 @@ class APTracker {
             updateStatus("Upload", "inprogress");
         } else if (this.uploadedVideos.length === 0) {
             updateStatus("Upload", "");
+        }
+        this.updateFrameTimestamps();
+    }
+
+    async updateFrameTimestamps() {
+        try {
+            this.frameTimestamps = await extractAllFrameTimestamps(this.uploadedVideos);
+            console.log("Extracted frame timestamps:", this.frameTimestamps);
+        } catch (error) {
+            console.error("Error extracting frame timestamps:", error);
+            this.frameTimestamps = [];
         }
     }
 
