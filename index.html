@@ -99,7 +99,7 @@
                 <div class="progress">
                     <p>Progression</p>
                     <div class="progress-label" id="progress-label">0/7</div>
-                    <div class="progress-bar" id="progress-bar">
+                    <div class="progress-bar" id="progress-bar" style="--level: 0%">
                         <div class="progress-fill"></div>
                     </div>
                 </div>
@@ -299,22 +299,22 @@
             </div>
         </div>
         <div class="content">
-            <div class="video-container">
-                <div class="video" id="video-A">
+            <div class="videos-container">
+                <div class="video-container" id="video-container-A">
                     <div class="video-label">No video loaded</div>
-                    <video preload="metadata"></video>
+                    <video preload="metadata" muted></video>
                     <div class="empty-video">No video</div>
                 </div>
-                <div class="video" id="video-B">
+                <div class="video-container" id="video-container-B">
                     <div class="video-label">No video loaded</div>
-                    <video preload="metadata"></video>
+                    <video preload="metadata" muted></video>
                     <div class="empty-video">No video</div>
                 </div>
             </div>
-            <div class="player-controls">
+            <div class="players-control">
                 <div class="player" id="player-A">
                     <button class="to-start">⏮</button>
-                    <button class="play">▶ A</button>
+                    <button class="play">▶</button>
                     <button class="to-end">⏭</button>
                 </div>
                 <div class="player" id="player-Both">
@@ -324,7 +324,7 @@
                 </div>
                 <div class="player" id="player-B">
                     <button class="to-start">⏮</button>
-                    <button class="play">▶ B</button>
+                    <button class="play">▶</button>
                     <button class="to-end">⏭</button>
                 </div>
             </div>
@@ -332,56 +332,55 @@
             <div class="trim-controls">
                 <div class="trim-control" id="trim-A">
                     Start
-                    <div class="control">
-                        <button>‹</button>
-                        00:00:00
-                        <button>›</button>
+                    <div class="control start">
+                        <button class="back">‹</button>
+                        <div class="label">00:00:00</div>
+                        <button class="forward">›</button>
                     </div>
                     End
-                    <div class="control">
-                        <button>‹</button>
-                        00:00:00
-                        <button>›</button>
+                    <div class="control end">
+                        <button class="back">‹</button>
+                        <div class="label">00:00:00</div>
+                        <button class="forward">›</button>
                     </div>
                     <div class="trim-track">
-                        <div class="trim-selection" style="--start: 0%; --end: 80%;">
+                        <div class="trim-selection">
                             <div class="handle handle-left"></div>
                             <div class="handle handle-right"></div>
                         </div>
-                        <div class="playhead" style="--pos: 50%;"></div>
+                        <div class="playhead"></div>
                     </div>
-                    <div>
-
-                    </div>
+                    <div class="duration">Duration: 00:00:00</div>
                 </div>
                 <div class="divider">
                     <div class="line"></div>
-                    <div class="link-unlink">
-                        <img src="src/assets/glyph/link.svg" alt="Link">
-                        <!-- <img src="src/assets/glyph/unlink.svg" alt="Unlink"> -->
-                    </div>
+                    <button class="link-unlink" id="link-unlink">
+                        <!-- <img src="src/assets/glyph/link.svg" alt="Link"> -->
+                        <img src="src/assets/glyph/unlink.svg" alt="Unlink">
+                    </button>
                     <div class="line"></div>
                 </div>
                 <div class="trim-control" id="trim-B">
                     Start
-                    <div class="control">
-                        <button>‹</button>
-                        00:00:00
-                        <button>›</button>
+                    <div class="control start">
+                        <button class="back">‹</button>
+                        <div class="label">00:00:00</div>
+                        <button class="forward">›</button>
                     </div>
                     End
-                    <div class="control">
-                        <button>‹</button>
-                        00:00:00
-                        <button>›</button>
+                    <div class="control end">
+                        <button class="back">‹</button>
+                        <div class="label">00:00:00</div>
+                        <button class="forward">›</button>
                     </div>
                     <div class="trim-track">
-                        <div class="trim-selection" style="--start: 0%; --end: 100%;">
+                        <div class="trim-selection">
                             <div class="handle handle-left"></div>
                             <div class="handle handle-right"></div>
                         </div>
-                        <div class="playhead" style="--pos: 85%;"></div>
+                        <div class="playhead"></div>
                     </div>
+                    <div class="duration">Duration: 00:00:00</div>
                 </div>
             </div>
         </div>

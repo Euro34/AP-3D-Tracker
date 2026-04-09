@@ -4,7 +4,7 @@ import { fetchFile } from "@ffmpeg/util";
 // Singleton instance to avoid reloading FFmpeg multiple times
 let ffmpegInstance: FFmpeg | null = null;
 
-// Cache to store results: Key is "filename-size", Value is timestamp array
+// Cache results: Key is "filename-size", Value is timestamp array
 class TimestampCache {
     private cache = new Map<string, number[]>();
     private readonly maxEntries: number;
@@ -16,7 +16,7 @@ class TimestampCache {
     get(key: string): number[] | undefined {
         if (!this.cache.has(key)) return undefined;
 
-        // Refresh the item: delete and re-insert so it's "newest"
+        // Refresh the item
         const value = this.cache.get(key)!;
         this.cache.delete(key);
         this.cache.set(key, value);
@@ -39,7 +39,7 @@ class TimestampCache {
 }
 
 // Initialize with a reasonable limit (e.g., 20 videos)
-const timestampCache = new TimestampCache(20);
+const timestampCache = new TimestampCache(10);
 
 async function getFFmpeg(): Promise<FFmpeg> {
     if (ffmpegInstance) return ffmpegInstance;

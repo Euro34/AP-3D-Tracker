@@ -66,13 +66,13 @@
     display: block;
 }
 
-.SyncEditor .video-container {
+.SyncEditor .videos-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2px;
 }
 
-.SyncEditor .video-container .video{
+.SyncEditor .videos-container .video-container {
 	position: relative;
     display: flex;
 	flex-direction: column;
@@ -102,6 +102,7 @@
 
 .SyncEditor .empty-video {
 	position: absolute;
+    z-index: -1;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -112,7 +113,7 @@
 }
 
 /* Player Controls */
-.SyncEditor .player-controls {
+.SyncEditor .players-control {
     position: relative;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -120,7 +121,7 @@
     background-color: var(--background3-color);
 }
 
-.SyncEditor .player-controls .player {
+.SyncEditor .players-control .player {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -128,7 +129,7 @@
     gap: 10px;
 }
 
-.SyncEditor .player-controls button {
+.SyncEditor .players-control button {
     padding: 5px 15px;
     border: 1px solid var(--border-color);
     border-radius: 5px;
@@ -139,7 +140,7 @@
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.SyncEditor .player-controls button:hover {
+.SyncEditor .players-control button:hover {
     background-color: var(--border-color);
     color: var(--background3-color);
 }
@@ -206,8 +207,19 @@
 }
 
 .link-unlink {
-    width: 30px;
-    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 50%;
+    background-color: var(--background3-color);
+    transition: background-color 0.3s ease;
+}
+
+.link-unlink:hover {
+    background-color: var(--border-color);
 }
 
 .divider img {
@@ -220,8 +232,8 @@
 /* Trim Track */
 .trim-track {
     position: relative;
-    overflow: hidden;
-    width: 100%;
+    overflow: visible;
+    width: 90%;
     height: 40px;
     border-radius: 8px;
     background-color: var(--background3-color);
@@ -265,12 +277,12 @@
 }
 
 .handle-left {
-    left: -3px;
+    left: -12px;
     border-radius: 6px 0 0 6px;
 }
 
 .handle-right {
-    right: -3px;
+    right: -12px;
     border-radius: 0 6px 6px 0;
 }
 

@@ -3,6 +3,7 @@ import { ReferenceObject } from "./core/ReferenceObject";
 
 import { updateStatus } from "./UI/workflow";
 import { extractAllFrameTimestamps } from "./core/ExtractFrame";
+import { syncEditor } from "./UI/sync";
 
 class APTracker {
     uploadedVideos: File[] = [];
@@ -25,6 +26,7 @@ class APTracker {
     async updateFrameTimestamps() {
         try {
             this.frameTimestamps = await extractAllFrameTimestamps(this.uploadedVideos);
+            syncEditor.updateVideos(this.uploadedVideos, this.frameTimestamps);
             console.log("Extracted frame timestamps:", this.frameTimestamps);
         } catch (error) {
             console.error("Error extracting frame timestamps:", error);
