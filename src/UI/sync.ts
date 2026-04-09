@@ -1,115 +1,88 @@
-// import { apTracker } from "../main";
+import { apTracker } from "../main";
 
 // Card
 const openSyncEditorBtn = document.getElementById("open-sync-editor") as HTMLButtonElement;
 const closeSyncEditorBtn = document.getElementById("close-sync-editor") as HTMLButtonElement;
 
 openSyncEditorBtn.addEventListener("click", () => {
-    const syncEditor = document.querySelector(".SyncEditor") as HTMLDivElement;
-    syncEditor.classList.add("active");
+    const syncEditorContainer = document.querySelector(".SyncEditor") as HTMLDivElement;
+    syncEditorContainer.classList.add("active");
 });
 
 closeSyncEditorBtn.addEventListener("click", () => {
-    const syncEditor = document.querySelector(".SyncEditor") as HTMLDivElement;
-    syncEditor.classList.remove("active");
+	apTracker.updateSync(syncEditor.getTrimState())
+    const syncEditorContainer = document.querySelector(".SyncEditor") as HTMLDivElement;
+    syncEditorContainer.classList.remove("active");
 });
 
 
 
 // SyncEditor
-type TrimState = {
-	startFrame: number;
-	endFrame: number;
-};
-
 class VideoHandler {
 	public file: File;
 	public frameTimestamps: number[] = [];
 
 	private label: HTMLDivElement;
 	public video: HTMLVideoElement;
-	private toStartBtn: HTMLButtonElement;
+
 	private playBtn: HTMLButtonElement;
-	private toEndBtn: HTMLButtonElement;
 
 	private startTimeDisplay: HTMLDivElement;
-	private startBackBtn: HTMLButtonElement;
-	private startForwardBtn: HTMLButtonElement;
-
 	private endTimeDisplay: HTMLDivElement;
-	private endBackBtn: HTMLButtonElement;
-	private endForwardBtn: HTMLButtonElement;
-
+    
 	private trimSelection: HTMLDivElement;
 	private playhead: HTMLDivElement;
 	private durationDisplay: HTMLDivElement;
+	private currentTimeDisplay: HTMLDivElement;
+    
+    public startFrame: number = 0;
+    public endFrame: number = 0;
+    
+    get hasVideo(): boolean {return this.file.size > 0 && this.frameTimestamps.length > 0;}
 
-	public startFrame: number = 0;
-	public endFrame: number = 0;
+    get totalFrames(): number {return this.frameTimestamps.length;}
 
-	// Getters so SyncEditor can read times directly
-	get startTime(): number {
-		return this.frameTimestamps[this.startFrame] ?? 0;
-	}
-	get endTime(): number {
-		return this.frameTimestamps[this.endFrame] ?? this.video.duration ?? 0;
-	}
-	get totalFrames(): number {
-		return this.frameTimestamps.length;
-	}
-	get hasVideo(): boolean {
-		return this.file.size > 0 && this.frameTimestamps.length > 0;
-	}
+	get currentFrame(): number {return this.frameTimestamps.findIndex(t => t >= this.video.currentTime);}
+
+    get isPaused(): boolean {return this.video.paused;}
 
 	constructor(name: string) {
 		this.file = new File([], "");
 
 		const videoContainer = document.getElementById(`video-container-${name}`) as HTMLDivElement;
-		if (!videoContainer) console.warn(`Container for video ${name} not found.`);
-
-		const player = document.getElementById(`player-${name}`) as HTMLDivElement;
-		if (!player) console.warn(`Player for ${name} not found.`);
-
-		const trim = document.getElementById(`trim-${name}`) as HTMLDivElement;
-		if (!trim) console.warn(`Trim control for ${name} not found.`);
-
 		this.label = videoContainer.querySelector(".video-label") as HTMLDivElement;
 		this.video = videoContainer.querySelector("video") as HTMLVideoElement;
-
-		this.toStartBtn = player.querySelector(".to-start") as HTMLButtonElement;
+        
+		const player = document.getElementById(`player-${name}`) as HTMLDivElement;
+		player.querySelector(".to-start")!.addEventListener("click", () => this.seekToStart());
+		player.querySelector(".to-end")!.addEventListener("click", () => this.seekToEnd());
+		player.querySelector(".back")!.addEventListener("click", () => this.seekBack());
+		player.querySelector(".forward")!.addEventListener("click", () => this.seekForward());
 		this.playBtn = player.querySelector(".play") as HTMLButtonElement;
-		this.toEndBtn = player.querySelector(".to-end") as HTMLButtonElement;
+		this.playBtn.addEventListener("click", () => this.togglePlay());
+
+		const trim = document.getElementById(`trim-${name}`) as HTMLDivElement;
 
 		const startControl = trim.querySelector(".start") as HTMLDivElement;
+		startControl.querySelector(".back")!.addEventListener("click", () => this.stepStartFrame(-1));
+		startControl.querySelector(".forward")!.addEventListener("click", () => this.stepStartFrame(1));
 		this.startTimeDisplay = startControl.querySelector(".label") as HTMLDivElement;
-		this.startBackBtn = startControl.querySelector(".back") as HTMLButtonElement;
-		this.startForwardBtn = startControl.querySelector(".forward") as HTMLButtonElement;
 
 		const endControl = trim.querySelector(".end") as HTMLDivElement;
+		endControl.querySelector(".back")!.addEventListener("click", () => this.stepEndFrame(-1));
+		endControl.querySelector(".forward")!.addEventListener("click", () => this.stepEndFrame(1));
 		this.endTimeDisplay = endControl.querySelector(".label") as HTMLDivElement;
-		this.endBackBtn = endControl.querySelector(".back") as HTMLButtonElement;
-		this.endForwardBtn = endControl.querySelector(".forward") as HTMLButtonElement;
 
 		this.trimSelection = trim.querySelector(".trim-selection") as HTMLDivElement;
 		this.playhead = trim.querySelector(".playhead") as HTMLDivElement;
 		this.durationDisplay = trim.querySelector(".duration") as HTMLDivElement;
+		this.currentTimeDisplay = trim.querySelector(".current-time") as HTMLDivElement;
 
 		// Trim bar drag
 		this.initTrimBarDrag(trim);
 
-		// Playback
-		this.playBtn.addEventListener("click", () => this.togglePlay());
-		this.toStartBtn.addEventListener("click", () => this.seekToStart());
-		this.toEndBtn.addEventListener("click", () => this.seekToEnd());
-
-		// Frame stepping — back/forward wired externally by SyncEditor
-        this.startBackBtn.addEventListener("click", () => this.stepStartFrame(-1));
-        this.startForwardBtn.addEventListener("click", () => this.stepStartFrame(1));
-        this.endBackBtn.addEventListener("click", () => this.stepEndFrame(-1));
-        this.endForwardBtn.addEventListener("click", () => this.stepEndFrame(1));
-
 		// Sync playhead display while playing
-		this.video.addEventListener("timeupdate", () => this.updatePlayhead());
+		this.video.addEventListener("timeupdate", () => this.movePlayhead());
 		this.video.addEventListener("pause", () => this.updatePlayBtn(false));
 		this.video.addEventListener("play", () => this.updatePlayBtn(true));
 		this.video.addEventListener("ended", () => {
@@ -117,65 +90,63 @@ class VideoHandler {
 			this.seekToStart();
 		});
 
-		// this.setDefault();
+		this.setDefault();
 	}
 
-	// ── Playback ──────────────────────────────────────────────────────────────
 
+	// Playback
 	public togglePlay() {
 		if (!this.hasVideo) return;
-		if (this.video.paused) {
-			// If at or past end trim, rewind first
-			if (this.video.currentTime >= this.endTime) {
-				this.video.currentTime = this.startTime;
+        if (this.isPaused) {
+			if (this.video.currentTime >= this.frameTimestamps[this.endFrame]) {
+				this.video.currentTime = this.frameTimestamps[this.startFrame];
 			}
-			this.video.play();
+			this.play();
 		} else {
-			this.video.pause();
-		}
+            this.pause();
+        }
+    }
+
+    public play() {
+		this.video.play(); 
+		this.updatePlayBtn(this.isPaused);
+		this.movePlayhead();
 	}
 
 	public pause() {
 		this.video.pause();
+		this.updatePlayBtn(this.isPaused);
+		this.movePlayhead();
 	}
 
-	public seekToStart() {
-		this.seekToTime(this.startTime);
-	}
+	private updatePlayBtn(playing: boolean) {this.playBtn.textContent = playing ? "⏸" : "▶";}
 
-	public seekToEnd() {
-		this.seekToTime(this.endTime);
-	}
+	public seekToStart() {this.seekToFrame(this.startFrame);}
+	public seekToEnd() {this.seekToFrame(this.endFrame);}
+	public seekBack() {this.seekToFrame(this.currentFrame - 1);}
+	public seekForward() {this.seekToFrame(this.currentFrame + 1);}
 
-	public seekToTime(time: number) {
+	public seekToFrame(frame: number) {
 		if (!this.hasVideo) return;
-		this.video.currentTime = time;
+		this.video.currentTime = this.frameTimestamps[frame];
 	}
 
-	private updatePlayBtn(playing: boolean) {
-		this.playBtn.textContent = playing ? "⏸" : "▶";
-	}
-
-	// ── Frame stepping ────────────────────────────────────────────────────────
-
-	// Called directly for unlinked mode, or by SyncEditor for linked mode
+    // Frame stepping
 	public stepStartFrame(delta: number) {
 		if (!this.hasVideo) return;
-		const next = Math.max(0, Math.min(this.endFrame - 1, this.startFrame + delta));
-		this.startFrame = next;
-		this.seekToTime(this.startTime);
+		this.startFrame = Math.max(0, Math.min(this.endFrame - 1, this.startFrame + delta));
+		this.seekToFrame(this.startFrame);
 		this.updateTrimDisplay();
 	}
 
 	public stepEndFrame(delta: number) {
 		if (!this.hasVideo) return;
-		const next = Math.max(this.startFrame + 1, Math.min(this.totalFrames - 1, this.endFrame + delta));
-		this.endFrame = next;
-		this.seekToTime(this.endTime);
+		this.endFrame = Math.max(this.startFrame + 1, Math.min(this.totalFrames - 1, this.endFrame + delta));
+		this.seekToFrame(this.endFrame);
 		this.updateTrimDisplay();
 	}
-	// ── Trim bar drag ─────────────────────────────────────────────────────────
 
+	// Trim bar dragging //NEED TO CHECK
 	private initTrimBarDrag(trim: HTMLDivElement) {
         const bar = trim.querySelector(".trim-selection") as HTMLDivElement;
         if (!bar) { console.warn("trim-bar not found"); return; }
@@ -230,15 +201,15 @@ class VideoHandler {
 
             if (dragging === "start-handle") {
                 this.startFrame = Math.max(0, Math.min(this.endFrame - 1, frameFromFrac(frac)));
-                this.seekToTime(this.startTime);
+                this.seekToFrame(this.startFrame);
                 this.updateTrimDisplay();
             } else if (dragging === "end-handle") {
                 this.endFrame = Math.max(this.startFrame + 1, Math.min(this.totalFrames - 1, frameFromFrac(frac)));
-                this.seekToTime(this.endTime);
+                this.seekToFrame(this.endFrame);
                 this.updateTrimDisplay();
             } else if (dragging === "playhead") {
                 const clamped = Math.max(getStartFrac(), Math.min(getEndFrac(), frac));
-                this.seekToTime(clamped * this.video.duration);
+                this.seekToFrame(clamped * this.video.duration);
             } else if (dragging === "window") {
                 const delta = frac - windowDragStartFrac;
                 const deltaFrames = Math.round(delta * (this.totalFrames - 1));
@@ -264,50 +235,46 @@ class VideoHandler {
         window.addEventListener("touchend", onEnd);
     }
 
-	// ── Display updates ───────────────────────────────────────────────────────
-
-	private updatePlayhead() {
-		if (!this.hasVideo || !this.video.duration) return;
-		// Stop playback at end trim
-		if (this.video.currentTime >= this.endTime) {
+    // Trim UI
+	private movePlayhead() {
+		if (!this.hasVideo) return;
+        if (this.video.currentTime > this.frameTimestamps[this.endFrame]) {
 			this.video.pause();
-			this.video.currentTime = this.endTime;
+			this.video.currentTime = this.frameTimestamps[this.startFrame];
 		}
-        
-		const frac = this.video.currentTime / this.video.duration;
-		this.playhead.style.setProperty("--pos", `${frac * 100}%`);
+
+		const pct = this.video.currentTime / this.video.duration * 100;
+		this.playhead.style.setProperty("--pos", `${pct}%`);
+;
+		this.currentTimeDisplay.textContent = `Current time: ${this.formatTime(this.currentFrame)}`;
 	}
 
 	public updateTrimDisplay() {
-		if (!this.hasVideo) return;
 		const total = this.totalFrames - 1;
-		const startFrac = this.startFrame / total;
-		const endFrac = this.endFrame / total;
+		const startPct = this.startFrame / total * 100;
+		const endPct = this.endFrame / total * 100;
 
-		this.trimSelection.style.setProperty("--start", `${startFrac * 100}%`);
-		this.trimSelection.style.setProperty("--end", `${endFrac * 100}%`);
+		this.startTimeDisplay.textContent = this.formatTime(this.startFrame);
+		this.endTimeDisplay.textContent = this.formatTime(this.endFrame);
 
-		this.startTimeDisplay.textContent = this.formatTime(this.startTime);
-		this.endTimeDisplay.textContent = this.formatTime(this.endTime);
+		this.trimSelection.style.setProperty("--start", `${startPct}%`);
+		this.trimSelection.style.setProperty("--end", `${endPct}%`);
 
-		const duration = this.endTime - this.startTime;
-		if (this.durationDisplay) {
-			this.durationDisplay.textContent = `Duration: ${this.formatTime(duration)}`;
-		}
+		const duration = this.endFrame - this.startFrame;
+        this.durationDisplay.textContent = `Duration: ${this.formatTime(duration)}`;
 	}
 
-	private formatTime(seconds: number): string {
+	private formatTime(frame: number): string {
+        const seconds = this.frameTimestamps[frame];
         const m = Math.floor(seconds / 60);
         const s = Math.floor(seconds % 60);
 
         // Count how many frames fall within the same whole second
         const secondStart = Math.floor(seconds);
-        const framesIntoSecond = this.frameTimestamps.filter(t => t >= secondStart && t < seconds).length;
+        const secondToFrame = this.frameTimestamps.filter(t => t >= secondStart && t < seconds).length;
 
-        return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${String(framesIntoSecond).padStart(2, "0")}`;
+        return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${String(secondToFrame).padStart(2, "0")}`;
     }
-
-	// ── Load / reset ──────────────────────────────────────────────────────────
 
 	public updateVideo(file: File, timestamps: number[]) {
         this.file = file;
@@ -319,11 +286,11 @@ class VideoHandler {
         this.video.load();
 
         this.startFrame = 0;
-        this.endFrame = timestamps.length - 1;
+        this.endFrame = this.totalFrames - 1;
 
-        // Seek to first frame once metadata is ready
+        // Seek to first frame once ready
         this.video.addEventListener("loadedmetadata", () => {
-            this.video.currentTime = timestamps[0] ?? 0;
+            this.video.currentTime = timestamps[0];
             this.updateTrimDisplay();
         }, { once: true });
     }
@@ -345,15 +312,15 @@ class VideoHandler {
 		this.trimSelection.style.setProperty("--start", "0%");
 		this.trimSelection.style.setProperty("--end", "100%");
 		this.playhead.style.setProperty("--pos", "0%");
-		if (this.durationDisplay) this.durationDisplay.textContent = "Duration: 00:00.00";
+		this.durationDisplay.textContent = "Duration: 00:00.00";
 	}
 }
-
-// ── SyncEditor ────────────────────────────────────────────────────────────────
 
 class SyncEditor {
 	private videoA: VideoHandler;
 	private videoB: VideoHandler;
+
+	private playBtn: HTMLButtonElement;
 
 	// Cache by filename so we can detect which slot each file belongs to
 	private fileCache: Map<string, { file: File; timestamps: number[] }> = new Map();
@@ -362,37 +329,50 @@ class SyncEditor {
 		this.videoA = new VideoHandler("A");
 		this.videoB = new VideoHandler("B");
 
-		// Both player
 		const playerBoth = document.getElementById("player-Both") as HTMLDivElement;
-		playerBoth.querySelector(".play")!.addEventListener("click", () => this.playBoth());
 		playerBoth.querySelector(".to-start")!.addEventListener("click", () => this.toStartBoth());
 		playerBoth.querySelector(".to-end")!.addEventListener("click", () => this.toEndBoth());
+		playerBoth.querySelector(".back")!.addEventListener("click", () => this.backBoth());
+		playerBoth.querySelector(".forward")!.addEventListener("click", () => this.forwardBoth());
+
+		this.playBtn = playerBoth.querySelector(".play") as HTMLButtonElement;
+		this.playBtn.addEventListener("click", () => this.toggleBoth());
 	}
 
-	// ── Playback ──────────────────────────────────────────────────────────────
-
-	private playBoth() {
-        
-		this.videoA.video.play();
-		this.videoB.video.play();
+	// Playback Both
+	private toggleBoth() {
+		if (!this.videoA.hasVideo || !this.videoB.hasVideo) return;
+        if (this.videoA.isPaused) {
+            this.videoA.play();
+            this.videoB.play();
+        } else {
+            this.videoA.pause();
+            this.videoB.pause();
+        }
 	}
-
 	private toStartBoth() {
 		this.videoA.seekToStart();
 		this.videoB.seekToStart();
 	}
-
 	private toEndBoth() {
 		this.videoA.seekToEnd();
 		this.videoB.seekToEnd();
+	}
+	private backBoth() {
+		this.videoA.seekBack();
+		this.videoB.seekBack();
+	}
+	private forwardBoth() {
+		this.videoA.seekForward();
+		this.videoB.seekForward();
 	}
 
 	// ── Match duration ────────────────────────────────────────────────────────
 
 	public matchBDurationToA() {
 		if (!this.videoA.hasVideo || !this.videoB.hasVideo) return;
-		const targetDuration = this.videoA.endTime - this.videoA.startTime;
-		const bStart = this.videoB.startTime;
+		const targetDuration = this.videoA.endFrame - this.videoA.startFrame;
+		const bStart = this.videoB.startFrame;
 		const targetEndTime = bStart + targetDuration;
 
 		// Find the closest frame in B to targetEndTime
@@ -410,11 +390,11 @@ class SyncEditor {
 	// ── File management ───────────────────────────────────────────────────────
 
 	// Returns the trim state for both videos — call this when proceeding to tracking
-	public getTrimState(): { a: TrimState | null; b: TrimState | null } {
-		return {
-			a: this.videoA.hasVideo ? { startFrame: this.videoA.startFrame, endFrame: this.videoA.endFrame } : null,
-			b: this.videoB.hasVideo ? { startFrame: this.videoB.startFrame, endFrame: this.videoB.endFrame } : null,
-		};
+	public getTrimState(): (number[] | null)[]  {
+		return [
+			this.videoA.hasVideo ? [this.videoA.startFrame, this.videoA.endFrame] : null,
+			this.videoB.hasVideo ? [this.videoB.startFrame, this.videoB.endFrame] : null
+		];
 	}
 
 	public updateVideos(files: File[], frameTimestamps: number[][]) {

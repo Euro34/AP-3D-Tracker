@@ -34,7 +34,13 @@ class APTracker {
         }
     }
 
-    updateSync(start1: number, end1: number, start2: number, end2: number) {
+    updateSync(trimStates: (number[] | null)[]) {
+        const [trim1, trim2] = trimStates;
+        if (!trim1 || !trim2) return;
+
+        const [start1, end1] = trim1;
+        const [start2, end2] = trim2;
+
         const duration1 = end1 - start1;
         const duration2 = end2 - start2;
 
