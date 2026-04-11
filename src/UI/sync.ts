@@ -46,6 +46,11 @@ class VideoHandler {
 
 	get currentFrame(): number {return this.frameAtTime(this.video.currentTime);}
 
+	get duration(): number {
+		if (!this.hasVideo) return 0;
+		return this.timeAtFrame(this.endFrame) - this.timeAtFrame(this.startFrame);
+	}
+
 
 	constructor(name: string) {
 		this.file = new File([], "");
@@ -171,13 +176,10 @@ class VideoHandler {
 		this.updateTrimDisplay();
 	}
 
-	// Trim bar dragging //NEED TO CHECK
+	// Trim bar dragging
 	private initTrimBarDrag(trim: HTMLDivElement) {
-        const bar = trim.querySelector(".trim-selection") as HTMLDivElement;
+        const bar = trim.querySelector(".trim-track") as HTMLDivElement;
         if (!bar) { console.warn("trim-bar not found"); return; }
-
-        const PLAYHEAD_HIT = 0.1;
-        const HANDLE_HIT = 0.1;
 
         let dragging: "start-handle" | "end-handle" | "playhead" | "window" | null = null;
         let windowDragStartFrac = 0;
@@ -199,26 +201,39 @@ class VideoHandler {
         const getPlayFrac = () => this.video.duration ? this.video.currentTime / this.video.duration : 0;
 
         const onStart = (e: MouseEvent | TouchEvent) => {
-            if (!this.hasVideo) return;
-            const frac = fracFromEvent(e);
-            const startFrac = getStartFrac();
-            const endFrac = getEndFrac();
-            const playFrac = getPlayFrac();
+			if (!this.hasVideo) return;
+			const rect = bar.getBoundingClientRect();
+			const clientX = e instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
+			
+			// Get the relative pixel position of the click (0 to rect.width)
+			const clickX = clientX - rect.left;
 
-            if (Math.abs(frac - startFrac) < HANDLE_HIT) {
-                dragging = "start-handle";
-            } else if (Math.abs(frac - endFrac) < HANDLE_HIT) {
-                dragging = "end-handle";
-            } else if (Math.abs(frac - playFrac) < PLAYHEAD_HIT) {
-                dragging = "playhead";
-            } else if (frac > startFrac && frac < endFrac) {
-                dragging = "window";
-                windowDragStartFrac = frac;
-                windowDragStartFrame = this.startFrame;
-                windowDragEndFrame = this.endFrame;
-            }
-            e.preventDefault();
-        };
+			// Convert current state (frames/time) into pixel positions
+			const startX = getStartFrac() * rect.width;
+			const endX = getEndFrac() * rect.width;
+			const playX = getPlayFrac() * rect.width;
+
+			// Define a constant pixel "hit" radius (e.g., 15px)
+			const PLAYHEAD_HIT = 3;
+        	const HANDLE_HIT = 12;
+
+			// Priority order: Playhead > Handles > Window
+			if (Math.abs(clickX - playX) < PLAYHEAD_HIT) {
+				dragging = "playhead";
+			} else if (Math.abs(clickX - startX) < HANDLE_HIT) {
+				dragging = "start-handle";
+			} else if (Math.abs(clickX - endX) < HANDLE_HIT) {
+				dragging = "end-handle";
+			} else if (clickX > startX && clickX < endX) {
+				dragging = "window";
+				// Convert the clickX back to a fraction just for the window offset logic
+				windowDragStartFrac = clickX / rect.width;
+				windowDragStartFrame = this.startFrame;
+				windowDragEndFrame = this.endFrame;
+			}
+			
+			if (dragging) e.preventDefault();
+		};
 
         const onMove = (e: MouseEvent | TouchEvent) => {
             if (!dragging || !this.hasVideo) return;
@@ -233,9 +248,11 @@ class VideoHandler {
                 this.seekToFrame(this.endFrame);
                 this.updateTrimDisplay();
             } else if (dragging === "playhead") {
-                const clamped = Math.max(getStartFrac(), Math.min(getEndFrac(), frac));
-                this.seekToFrame(clamped * this.video.duration);
-            } else if (dragging === "window") {
+				const clampedFrac = Math.max(getStartFrac(), Math.min(getEndFrac(), frac));
+				const targetFrame = frameFromFrac(clampedFrac);
+				this.seekToFrame(targetFrame);
+				this.updateTrimDisplay(); 
+			} else if (dragging === "window") {
                 const delta = frac - windowDragStartFrac;
                 const deltaFrames = Math.round(delta * (this.totalFrames - 1));
                 const windowSize = windowDragEndFrame - windowDragStartFrame;
@@ -246,6 +263,7 @@ class VideoHandler {
                 this.startFrame = newStart;
                 this.endFrame = newEnd;
                 this.updateTrimDisplay();
+				this.seekToFrame(this.frameAtTime(this.video.currentTime)); // Keep playhead relative to window
             }
             e.preventDefault();
         };
@@ -271,8 +289,8 @@ class VideoHandler {
 		const pct = this.video.currentTime / this.video.duration * 100;
 		this.playhead.style.setProperty("--pos", `${pct}%`);
 
-		const currentFrame = this.currentFrame - this.startFrame;
-		this.currentTimeDisplay.textContent = `Current time: ${this.formatTime(currentFrame)}`;
+		const currentFrame = this.timeAtFrame(this.currentFrame) - this.timeAtFrame(this.startFrame);
+		this.currentTimeDisplay.textContent = `Current time: ${currentFrame.toFixed(3)}s`;
 	}
 
 	public updateTrimDisplay() {
@@ -285,9 +303,9 @@ class VideoHandler {
 
 		this.trimSelection.style.setProperty("--start", `${startPct}%`);
 		this.trimSelection.style.setProperty("--end", `${endPct}%`);
-
-		const duration = this.endFrame - this.startFrame;
-        this.durationDisplay.textContent = `Duration: ${this.formatTime(duration)}`;
+		// this.movePlayhead()
+;
+        this.durationDisplay.textContent = `Duration: ${this.duration.toFixed(3)}s`;
 	}
 
 	public updateVideo(file: File, timestamps: number[], startTrim: number | null = null, endTrim: number | null = null) {
@@ -407,17 +425,24 @@ class SyncEditor {
 	public matchDuration() {
 		if (!this.videoA.hasVideo || !this.videoB.hasVideo) return;
 
-		const DurationA = this.videoA.endFrame - this.videoA.startFrame;
-		const DurationB = this.videoB.endFrame - this.videoB.startFrame;
+		const timestartA = this.videoA.timeAtFrame(this.videoA.startFrame);
+		const timeendA = this.videoA.timeAtFrame(this.videoA.endFrame);
+		const timestartB = this.videoB.timeAtFrame(this.videoB.startFrame);
+		const timeendB = this.videoB.timeAtFrame(this.videoB.endFrame);
+
+		const DurationA = timeendA - timestartA;
+		const DurationB = timeendB - timestartB;
 
 		if (DurationA === DurationB) return;
 		if (DurationA < DurationB) {
-			this.videoB.endFrame = this.videoB.startFrame + DurationA;
-			this.videoB.seekToFrame(this.videoB.startFrame);
+			const targetTime = timestartB + DurationA;
+			const targetFrame = this.videoB.frameAtTime(targetTime) - 1;
+			this.videoB.endFrame = targetFrame;
 			this.videoB.updateTrimDisplay();
 		} else {
-			this.videoA.endFrame = this.videoA.startFrame + DurationB;
-			this.videoA.seekToFrame(this.videoA.startFrame);
+			const targetTime = timestartA + DurationB;
+			const targetFrame = this.videoA.frameAtTime(targetTime) - 1;
+			this.videoA.endFrame = targetFrame;
 			this.videoA.updateTrimDisplay();
 		}
 	}
@@ -469,10 +494,11 @@ class SyncEditor {
 	}
 
 	// Return
-	public getTrimState(): (number[] | null)[]  {
+	private getTrimState(): (number[] | null)[] {
 		return [
 			this.videoA.hasVideo ? [this.videoA.startFrame, this.videoA.endFrame] : null,
-			this.videoB.hasVideo ? [this.videoB.startFrame, this.videoB.endFrame] : null
+			this.videoB.hasVideo ? [this.videoB.startFrame, this.videoB.endFrame] : null,
+			this.videoA.hasVideo && this.videoB.hasVideo ? [this.videoA.duration, this.videoB.duration,] : null
 		];
 	}
 

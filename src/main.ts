@@ -9,7 +9,7 @@ import {} from "./UI/reference_object_dimension";
 class APTracker {
     uploadedVideos: File[] = [];
     frameTimestamps: number[][] = [];
-    sync: number[] | null = null; // [start1, end1, offsets(start2-start1)]
+    sync: number[] | null = null; // [start1, end1, start2, end2] (in frames)
     referenceObject: ReferenceObject | null = null;
 
     updateVideos(videos: File[]) {
@@ -38,20 +38,18 @@ class APTracker {
 
     updateSync(trimStates: (number[] | null)[]) {
         console.log("Updating trim states:", trimStates);
-        const [trim1, trim2] = trimStates;
-        if (!trim1 || !trim2) {
+        const [trim1, trim2, durations] = trimStates;
+        if (!trim1 || !trim2 || !durations) {
             updateStatus("Sync", "");
             return;
         }
 
         const [start1, end1] = trim1;
         const [start2, end2] = trim2;
+        const [duration1, duration2] = durations;
 
-        const duration1 = end1 - start1;
-        const duration2 = end2 - start2;
-
-        if (duration1 == duration2) {
-            this.sync = [start1, end1, start2 - start1];
+        if (Math.abs(duration1 - duration2) < 0.05) {
+            this.sync = [start1, end1, start2, end2];
             updateStatus("Sync", "done");
         } else {
             updateStatus("Sync", "inprogress");
