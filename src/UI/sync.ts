@@ -37,6 +37,7 @@ class VideoHandler {
 	private currentTimeDisplay: HTMLDivElement;
 
 	private disabled = false;
+	public onTrimChange: ((which: "start" | "end") => void) | null = null;
     
     public startFrame: number = 0;
     public endFrame: number = 0;
@@ -171,6 +172,7 @@ class VideoHandler {
 		this.startFrame = Math.max(0, Math.min(this.endFrame - 1, this.startFrame + delta));
 		this.seekToFrame(this.startFrame);
 		this.updateTrimDisplay();
+		this.onTrimChange?.("start");
 	}
 
 	public stepEndFrame(delta: number) {
@@ -178,6 +180,7 @@ class VideoHandler {
 		this.endFrame = Math.max(this.startFrame + 1, Math.min(this.totalFrames - 1, this.endFrame + delta));
 		this.seekToFrame(this.endFrame);
 		this.updateTrimDisplay();
+		this.onTrimChange?.("end");
 	}
 
 	// Trim bar dragging
@@ -248,10 +251,12 @@ class VideoHandler {
                 this.startFrame = Math.max(0, Math.min(this.endFrame - 1, frameFromFrac(frac)));
                 this.seekToFrame(this.startFrame);
                 this.updateTrimDisplay();
+				this.onTrimChange?.("start");
             } else if (dragging === "end-handle") {
                 this.endFrame = Math.max(this.startFrame + 1, Math.min(this.totalFrames - 1, frameFromFrac(frac)));
                 this.seekToFrame(this.endFrame);
                 this.updateTrimDisplay();
+				this.onTrimChange?.("end");
             } else if (dragging === "playhead") {
 				const clampedFrac = Math.max(getStartFrac(), Math.min(getEndFrac(), frac));
 				const targetFrame = frameFromFrac(clampedFrac);
@@ -268,6 +273,8 @@ class VideoHandler {
                 this.startFrame = newStart;
                 this.endFrame = newEnd;
                 this.updateTrimDisplay();
+				this.onTrimChange?.("start");
+				this.onTrimChange?.("end");
 				this.seekToFrame(this.frameAtTime(this.video.currentTime));
             }
             e.preventDefault();
@@ -453,28 +460,67 @@ class SyncEditor {
 
 	// Link
 	private toggleLink(trim: HTMLDivElement) {
-		// if (!this.videoA.hasVideo || !this.videoB.hasVideo) return; NOTE: UNCOMMENT LATER
 		this.linked = !this.linked;
-		this.videoB.toggleDisabled();
 		this.linkUnlinkBtn.classList.toggle("active");
+
+		// Determine controller vs follower based on fps
+		const [controller, follower] =
+			this.videoA.fps >= this.videoB.fps
+				? [this.videoA, this.videoB]
+				: [this.videoB, this.videoA];
+
 		if (this.linked) {
-			trim.style = "opacity: 0.5; cursor: not-allowed;";
+			// Disable follower's trim UI
+			trim.style.cssText = "opacity: 0.5; cursor: not-allowed;";
 			trim.querySelectorAll("*").forEach(item => {
 				item.setAttribute("disabled", "true");
 				item.classList.add("disabled");
 			});
+			follower.toggleDisabled();
+
+			// Mirror time delta from controller onto follower
+			const initialControllerTimeStart = controller.timeAtFrame(controller.startFrame);
+			const initialControllerTimeEnd = controller.timeAtFrame(controller.endFrame);
+			const initialFollowerTimeStart = follower.timeAtFrame(follower.startFrame);
+			const initialFollowerTimeEnd = follower.timeAtFrame(follower.endFrame);
+			controller.onTrimChange = (which) => {
+				if (!follower.hasVideo) return;
+				if (which === "start") {
+					const targetTime = initialFollowerTimeStart + (controller.timeAtFrame(controller.startFrame) - initialControllerTimeStart);
+					let targetFrame = follower.frameAtTime(targetTime);
+					const delta1 = Math.abs(targetTime - follower.timeAtFrame(targetFrame));
+					const delta2 = Math.abs(targetTime - follower.timeAtFrame(targetFrame - 1));
+					if (delta2 < delta1) targetFrame -= 1;
+					follower.startFrame = Math.max(0, Math.min(follower.endFrame - 1, targetFrame));
+					follower.seekToFrame(follower.startFrame);
+				} else {
+					const targetTime = initialFollowerTimeEnd + (controller.timeAtFrame(controller.endFrame) - initialControllerTimeEnd);
+					let targetFrame = follower.frameAtTime(targetTime);
+					const delta1 = Math.abs(targetTime - follower.timeAtFrame(targetFrame));
+					const delta2 = Math.abs(targetTime - follower.timeAtFrame(targetFrame - 1));
+					if (delta2 < delta1) targetFrame -= 1;
+					follower.endFrame = Math.max(follower.startFrame + 1, Math.min(follower.totalFrames - 1, targetFrame));
+					follower.seekToFrame(follower.endFrame);
+				}
+				follower.updateTrimDisplay();
+			};
+
 		} else {
-			trim.style = "opacity: 1; cursor: default;";
+			// Unlink: restore follower UI
+			trim.style.cssText = "opacity: 1; cursor: default;";
 			trim.querySelectorAll("*").forEach(item => {
-				item.setAttribute("disabled", "false");
+				item.removeAttribute("disabled");
 				item.classList.remove("disabled");
 			});
+			follower.toggleDisabled();
+			controller.onTrimChange = null;
 		}
 	}
 
 	// Match duration
 	public matchDuration() {
 		if (!this.videoA.hasVideo || !this.videoB.hasVideo) return;
+		if (this.linked) return;
 
 		const timestartA = this.videoA.timeAtFrame(this.videoA.startFrame);
 		const timeendA = this.videoA.timeAtFrame(this.videoA.endFrame);
