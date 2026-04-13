@@ -22,6 +22,7 @@ class VideoHandler {
 	public frameTimestamps: number[] = [];
 
 	private label: HTMLDivElement;
+	private fpsDisplay: HTMLParagraphElement;
 	public video: HTMLVideoElement;
 
 	private playBtn: HTMLButtonElement;
@@ -57,7 +58,8 @@ class VideoHandler {
 		this.file = new File([], "");
 
 		const videoContainer = document.getElementById(`video-container-${name}`) as HTMLDivElement;
-		this.label = videoContainer.querySelector(".video-label") as HTMLDivElement;
+		this.label = videoContainer.querySelector(".video-label .name") as HTMLDivElement;
+		this.fpsDisplay = videoContainer.querySelector(".video-label .fpsDisplay") as HTMLParagraphElement;
 		this.video = videoContainer.querySelector("video") as HTMLVideoElement;
         
 		const player = document.getElementById(`player-${name}`) as HTMLDivElement;
@@ -330,6 +332,9 @@ class VideoHandler {
 			this.endFrame = endTrim;
 		}
 
+		const fps = this.totalFrames > 1 ? (this.totalFrames - 1) / this.timeAtFrame(this.totalFrames - 1) : 0;
+		this.fpsDisplay.textContent = `~${fps.toFixed(2)} fps`;
+
         // Seek to start frame once ready
         this.video.addEventListener("loadedmetadata", () => {
             this.seekToStart();
@@ -341,6 +346,7 @@ class VideoHandler {
 		this.file = new File([], "");
 		this.frameTimestamps = [];
 		this.label.textContent = "No video";
+		this.fpsDisplay.textContent = "- fps";
 		this.video.src = "";
 		this.video.load();
 		this.startFrame = 0;

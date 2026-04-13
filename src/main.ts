@@ -48,7 +48,7 @@ class APTracker {
         const [start2, end2] = trim2;
         const [duration1, duration2] = durations;
 
-        if (Math.abs(duration1 - duration2) < 0.05) {
+        if (Math.abs(duration1 - duration2) < 0.05) {    // Allow tolerance of 50ms
             this.sync = [start1, end1, start2, end2];
             updateStatus("Sync", "done");
         } else {
