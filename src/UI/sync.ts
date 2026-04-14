@@ -10,7 +10,7 @@ openSyncEditorBtn.addEventListener("click", () => {
 });
 
 closeSyncEditorBtn.addEventListener("click", () => {
-	syncEditor.updateMain();
+	syncEditor.close();
     const syncEditorContainer = document.querySelector(".SyncEditor") as HTMLDivElement;
     syncEditorContainer.classList.remove("active");
 });
@@ -106,7 +106,9 @@ class VideoHandler {
 
 	
 	public frameAtTime(time: number): number {
-		return this.frameTimestamps.findIndex(t => t >= time);
+		let result = this.frameTimestamps.findIndex(t => t >= time)
+		if (result === -1) return this.frameTimestamps.length - 1;
+		return result;
 	}
 
 	public timeAtFrame(frame: number): number {
@@ -138,11 +140,12 @@ class VideoHandler {
         }
     }
 
-    public play() {
-		if (!this.hasVideo) return;
-		this.video.play(); 
-		this.updatePlayBtn(this.isPaused);
+    public play(): Promise<void> {
+		if (!this.hasVideo) return Promise.resolve();
+		const p = this.video.play();
+		this.updatePlayBtn(true);
 		this.movePlayhead();
+		return p ?? Promise.resolve();
 	}
 
 	public pause() {
@@ -160,6 +163,7 @@ class VideoHandler {
 	public seekForward() {this.seekToFrame(this.currentFrame + 1);}
 
 	public seekToFrame(frame: number) {
+		if (!this.hasVideo) return;
 		frame = Math.max(frame, this.startFrame);
 		frame = Math.min(frame, this.endFrame);
 		this.video.currentTime = this.timeAtFrame(frame);
@@ -177,7 +181,7 @@ class VideoHandler {
 
 	public stepEndFrame(delta: number) {
 		if (!this.hasVideo) return;
-		this.endFrame = Math.max(this.startFrame + 1, Math.min(this.totalFrames - 1, this.endFrame + delta));
+		this.endFrame = Math.min(this.totalFrames - 1, Math.max(this.startFrame + 1, this.endFrame + delta));
 		this.seekToFrame(this.endFrame);
 		this.updateTrimDisplay();
 		this.onTrimChange?.("end");
@@ -273,8 +277,8 @@ class VideoHandler {
                 this.startFrame = newStart;
                 this.endFrame = newEnd;
                 this.updateTrimDisplay();
-				this.onTrimChange?.("start");
 				this.onTrimChange?.("end");
+				this.onTrimChange?.("start");
 				this.seekToFrame(this.frameAtTime(this.video.currentTime));
             }
             e.preventDefault();
@@ -359,6 +363,7 @@ class VideoHandler {
 		this.video.load();
 		this.startFrame = 0;
 		this.endFrame = 0;
+		this.disabled = false;
 		this.setDefault();
 	}
 
@@ -394,6 +399,8 @@ class SyncEditor {
 	private linkUnlinkBtn: HTMLButtonElement;
 	private linked = false;
 
+	private matchDurationBtn: HTMLButtonElement;
+
 	// Cache by filename so we can detect which slot each file belongs to
 	private fileCache: Map<string, { file: File; timestamps: number[] }> = new Map();
 
@@ -420,26 +427,23 @@ class SyncEditor {
 		this.trimA = document.getElementById("trim-A") as HTMLDivElement;
 		this.trimB = document.getElementById("trim-B") as HTMLDivElement;
 		this.linkUnlinkBtn = document.getElementById("link-unlink") as HTMLButtonElement;
-		this.linkUnlinkBtn.addEventListener("click", () => {
-			if (this.videoA.fps >= this.videoB.fps) {
-				this.toggleLink(this.trimB);
-			} else {
-				this.toggleLink(this.trimA);
-			}
-		});
+		this.linkUnlinkBtn.addEventListener("click", () => {this.toggleLink();});
 
-		document.getElementById("match-duration")!.addEventListener("click", () => this.matchDuration());
+		this.matchDurationBtn = document.getElementById("match-duration") as HTMLButtonElement;
+		this.matchDurationBtn.addEventListener("click", () => this.matchDuration());
 	}
 
 	// Playback Both
-	private toggleBoth() {
-        if (this.videoA.isPaused) {
-            this.videoA.play();
-            this.videoB.play();
-        } else {
-            this.videoA.pause();
-            this.videoB.pause();
-        }
+	private async toggleBoth() {
+		if (this.videoA.isPaused) {
+			await Promise.all([
+				this.videoA.video.play(),
+				this.videoB.video.play(),
+			]);
+		} else {
+			this.videoA.pause();
+			this.videoB.pause();
+		}
 	}
 	private toStartBoth() {
 		this.videoA.seekToStart();
@@ -449,29 +453,49 @@ class SyncEditor {
 		this.videoA.seekToEnd();
 		this.videoB.seekToEnd();
 	}
-	private backBoth() {
-		this.videoA.seekBack();
-		this.videoB.seekBack();
-	}
 	private forwardBoth() {
-		this.videoA.seekForward();
-		this.videoB.seekForward();
-	}
-
-	// Link
-	private toggleLink(trim: HTMLDivElement) {
-		this.linked = !this.linked;
-		this.linkUnlinkBtn.classList.toggle("active");
-
-		// Determine controller vs follower based on fps
 		const [controller, follower] =
-			this.videoA.fps >= this.videoB.fps
+			this.videoA.fps <= this.videoB.fps
 				? [this.videoA, this.videoB]
 				: [this.videoB, this.videoA];
 
+		controller.seekForward();
+		const targetTime = controller.timeAtFrame(controller.currentFrame) - controller.timeAtFrame(controller.startFrame) + follower.timeAtFrame(follower.startFrame);
+		let targetFrame = follower.frameAtTime(targetTime);
+		const delta1 = Math.abs(targetTime - follower.timeAtFrame(targetFrame));
+		const delta2 = Math.abs(targetTime - follower.timeAtFrame(targetFrame - 1));
+		if (delta2 < delta1) targetFrame -= 1;
+		follower.seekToFrame(targetFrame);
+	}
+	private backBoth() {
+		const [controller, follower] =
+			this.videoA.fps <= this.videoB.fps
+				? [this.videoA, this.videoB]
+				: [this.videoB, this.videoA];
+
+		controller.seekBack();
+		const targetTime = controller.timeAtFrame(controller.currentFrame) - controller.timeAtFrame(controller.startFrame) + follower.timeAtFrame(follower.startFrame);
+		let targetFrame = follower.frameAtTime(targetTime);
+		const delta1 = Math.abs(targetTime - follower.timeAtFrame(targetFrame));
+		const delta2 = Math.abs(targetTime - follower.timeAtFrame(targetFrame - 1));
+		if (delta2 < delta1) targetFrame -= 1;
+		follower.seekToFrame(targetFrame);
+	}
+
+	// Link
+	private toggleLink() {
+		this.linked = !this.linked;
+		this.linkUnlinkBtn.classList.toggle("active");
+
+		const [controller, follower, trim] =
+			this.videoA.fps >= this.videoB.fps
+				? [this.videoA, this.videoB, this.trimB]
+				: [this.videoB, this.videoA, this.trimA];
+
 		if (this.linked) {
-			// Disable follower's trim UI
-			trim.style.cssText = "opacity: 0.5; cursor: not-allowed;";
+			this.matchDurationBtn.setAttribute("disabled", "true");
+			this.matchDurationBtn.classList.add("disabled");
+			// trim.style.cssText = "opacity: 0.5; cursor: not-allowed;";
 			trim.querySelectorAll("*").forEach(item => {
 				item.setAttribute("disabled", "true");
 				item.classList.add("disabled");
@@ -499,15 +523,16 @@ class SyncEditor {
 					const delta1 = Math.abs(targetTime - follower.timeAtFrame(targetFrame));
 					const delta2 = Math.abs(targetTime - follower.timeAtFrame(targetFrame - 1));
 					if (delta2 < delta1) targetFrame -= 1;
-					follower.endFrame = Math.max(follower.startFrame + 1, Math.min(follower.totalFrames - 1, targetFrame));
+					follower.endFrame = Math.min(follower.totalFrames - 1, Math.max(follower.startFrame + 1, targetFrame));
 					follower.seekToFrame(follower.endFrame);
 				}
 				follower.updateTrimDisplay();
 			};
 
 		} else {
-			// Unlink: restore follower UI
-			trim.style.cssText = "opacity: 1; cursor: default;";
+			this.matchDurationBtn.removeAttribute("disabled");
+			this.matchDurationBtn.classList.remove("disabled");
+			// trim.style.cssText = "opacity: 1; cursor: default;";
 			trim.querySelectorAll("*").forEach(item => {
 				item.removeAttribute("disabled");
 				item.classList.remove("disabled");
@@ -520,7 +545,6 @@ class SyncEditor {
 	// Match duration
 	public matchDuration() {
 		if (!this.videoA.hasVideo || !this.videoB.hasVideo) return;
-		if (this.linked) return;
 
 		const timestartA = this.videoA.timeAtFrame(this.videoA.startFrame);
 		const timeendA = this.videoA.timeAtFrame(this.videoA.endFrame);
@@ -542,6 +566,8 @@ class SyncEditor {
 			this.videoA.endFrame = targetFrame;
 			this.videoA.updateTrimDisplay();
 		}
+		this.videoA.seekToFrame(this.videoA.startFrame);
+		this.videoB.seekToFrame(this.videoB.startFrame);
 	}
 	
 	// File management
@@ -599,7 +625,7 @@ class SyncEditor {
 		];
 	}
 
-	public updateMain() {
+	private updateMain() {
 		apTracker.updateSync(this.getTrimState());
 		const format = (n: number) => (Math.round(n * 1000) / 1000).toString();
 
@@ -625,6 +651,13 @@ class SyncEditor {
 			this.startB.textContent = "-";
 			this.endB.textContent = "-";
 			this.durationB.textContent = "-";
+		}
+	}
+
+	public close() {
+		this.updateMain();
+		if (this.linked) {
+			this.toggleLink();
 		}
 	}
 }

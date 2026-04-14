@@ -238,9 +238,11 @@
 .disabled {
     color: var(--text1-color) !important;
     cursor: not-allowed !important;
+    opacity: 0.5;
 }
 .players-control .disabled:hover {background-color: var(--background3-color) !important;}
 .trim-control button.disabled:hover {background-color: var(--background1-color) !important;}
+#match-duration.disabled:hover {background-color: var(--background1-color) !important;}
 
 .divider img {
     width: 30px;
