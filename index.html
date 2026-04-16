@@ -307,7 +307,7 @@
                         <div class="name">No video loaded</div>
                         <p class="fpsDisplay">- fps</p>
                     </div>
-                    <video preload="metadata" muted></video>
+                    <video preload="metadata" muted playsinline></video>
                     <div class="empty-video">No video</div>
                 </div>
                 <div class="video-container" id="video-container-B">
@@ -315,7 +315,7 @@
                         <div class="name">No video loaded</div>
                         <p class="fpsDisplay">- fps</p>
                     </div>
-                    <video preload="metadata" muted></video>
+                    <video preload="metadata" muted playsinline></video>
                     <div class="empty-video">No video</div>
                 </div>
             </div>
@@ -403,7 +403,7 @@
             <button id="match-duration">Match duration</button>
         </div>
     </div>
-    <div class="RefObjMarker">
+    <div class="RefObjMarker active">
         <div class="toolbar">
             <div class="toolbar-left">
                 <img id="logo" src="AP_Logo.svg" alt="AP Tracker Logo">
@@ -414,7 +414,31 @@
             </div>
         </div>
         <div class="content">
+            <div class="sidebar" id="refObjMarker-sidebar">
+                <div class="ref-3d-widget" id="ref-3d-widget"></div>
 
+                <div class="corner-selector" id="corner-selector">
+                    <button class="corner-btn selected" data-corner="0" title="Bottom · Front · Left">Bottom · Front · Left</button>
+                    <button class="corner-btn" data-corner="1" title="Bottom · Front · Right">Bottom · Front · Right</button>
+                    <button class="corner-btn" data-corner="2" title="Bottom · Back · Left">Bottom · Back · Left</button>
+                    <button class="corner-btn" data-corner="3" title="Bottom · Back · Right">Bottom · Back · Right</button>
+                    <button class="corner-btn" data-corner="4" title="Top · Front · Left">Top · Front · Left</button>
+                    <button class="corner-btn" data-corner="5" title="Top · Front · Right">Top · Front · Right</button>
+                    <button class="corner-btn" data-corner="6" title="Top · Back · Left">Top · Back · Left</button>
+                    <button class="corner-btn" data-corner="7" title="Top · Back · Right">Top · Back · Right</button>
+                </div>
+
+                <div class="vid-selector" id="vid-selector">
+                    <button class="vid-btn disabled active" id="vid-btn-a" data-vid="a">Cam A</button>
+                    <button class="vid-btn disabled" id="vid-btn-b" data-vid="b">Cam B</button>
+                </div>
+			</div>
+            <div class="ref-viewport" id="ref-viewport">
+                <div class="video-wrapper" id="video-wrapper">
+                    <video id="ref-video" loop muted playsinline></video>
+                    <canvas id="ref-overlay"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 

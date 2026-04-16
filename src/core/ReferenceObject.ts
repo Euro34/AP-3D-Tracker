@@ -23,12 +23,12 @@ export class ReferenceObject {
         ];
     }
 
-    private matchCornersToImagePoints(image_2D_points: Point_2D[]): [Point_2D[], Point_3D[]] {
+    private matchCornersToImagePoints(image_2D_points: Array<Point_2D | null>): [Point_2D[], Point_3D[]] {
         const matched_image_points: Point_2D[] = [];
         const matched_world_points: Point_3D[] = [];
 
         for (const [i, point] of image_2D_points.entries()) {
-            if (point !== new Point_2D()) {
+            if (point !== null) {
                 matched_image_points.push(point);
                 matched_world_points.push(this.corners_list[i]);
             }
@@ -37,7 +37,7 @@ export class ReferenceObject {
     }
 
 
-    public calculateProjectionMatrix(image_2D_points: Point_2D[]): Matrix {
+    public calculateProjectionMatrix(image_2D_points: Array<Point_2D | null>): Matrix {
         const [image_points, world_points] = this.matchCornersToImagePoints(image_2D_points);
         if (image_points.length !== world_points.length || image_points.length < 6) {
             throw new Error("There must be at least 6 point correspondences for a 3x4 matrix.");

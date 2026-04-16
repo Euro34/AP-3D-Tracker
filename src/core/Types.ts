@@ -15,10 +15,10 @@ export class Point_3D {
 }
 
 export class Point_2D {
-    x?: number;
-    y?: number;
+    x: number;
+    y: number;
 
-    constructor(x?: number, y?: number) {
+    constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
     }

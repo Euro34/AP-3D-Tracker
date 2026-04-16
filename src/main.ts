@@ -5,7 +5,7 @@ import { updateStatus } from "./UI/workflow";
 import { extractAllFrameTimestamps } from "./core/ExtractFrame";
 import { syncEditor } from "./UI/sync";
 import {} from "./UI/reference_object_dimension";
-import {} from "./UI/reference_object_marker";
+import { refObjMarker } from "./UI/reference_object_marker";
 
 class APTracker {
     uploadedVideos: File[] = [];
@@ -75,6 +75,7 @@ class APTracker {
             }
         }
 
+        refObjMarker.updateBoxDimensions(width, length, height);
         console.log("Updated reference object:", this.referenceObject);
     }
 }

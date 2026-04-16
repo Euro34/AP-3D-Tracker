@@ -3,14 +3,13 @@
     border: 1px solid var(--link-border-color);
     border-radius: 5px;
     background-color: var(--link-color);
-    color: var(--link-border-color);
+    color: var(--link-text-color);
     cursor: pointer;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .card#Sync .card-header .right button:hover {
     background-color: var(--link-border-color);
-    color: var(--link-color);
 }
 
 .cam-container {
