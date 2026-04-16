@@ -137,12 +137,11 @@ class VideoHandler {
         }
     }
 
-    public play(): Promise<void> {
-		if (!this.hasVideo) return Promise.resolve();
-		const p = this.video.play();
+    public play() {
+		if (!this.hasVideo) return;
+		this.video.play();
 		this.updatePlayBtn(true);
 		this.movePlayhead();
-		return p ?? Promise.resolve();
 	}
 
 	public pause() {
@@ -152,7 +151,7 @@ class VideoHandler {
 		this.movePlayhead();
 	}
 
-	private updatePlayBtn(playing: boolean) {this.playBtn.textContent = playing ? "⏸" : "▶";}
+	private updatePlayBtn(playing: boolean) {this.playBtn.textContent = playing ? "⏸\uFE0E" : "▶\uFE0E";}
 
 	public seekToStart() {this.seekToFrame(this.startFrame);}
 	public seekToEnd() {this.seekToFrame(this.endFrame);}

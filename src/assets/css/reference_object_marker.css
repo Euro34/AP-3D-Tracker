@@ -17,12 +17,12 @@
     position: fixed;
     z-index: 100;
     display: none;
+	overflow: hidden;
+	flex: 1;
     padding-bottom: 50px;
     background: var(--background1-color);
     inset: 0;
     scrollbar-width: none;
-	flex: 1;
-	overflow: hidden;
 }
 
 .RefObjMarker.active {
@@ -31,35 +31,35 @@
 
 .RefObjMarker .content {
     display: flex;
-	flex: 1;
 	overflow: hidden;
+	flex: 1;
     width: 100%;
     height: 100%;
 }
 
 .sidebar {
 	display: flex;
+	overflow-y: auto;
 	flex-direction: column;
+    justify-content: space-between;
+	align-items: center;
 	width: 300px;
 	min-width: 72px;
-	background-color: var(--background3-color);
-	border-right: 1px solid var(--border-color);
-	align-items: center;
-    justify-content: space-between;
 	padding: 20px 10px;
+	border-right: 1px solid var(--border-color);
+	background-color: var(--background3-color);
 	gap: 10px;
-	overflow-y: auto;
 }
 
 /* 3D Widget */
 .ref-3d-widget {
+	overflow: hidden;
+	flex-shrink: 0;
 	width: 100%;
 	height: auto;
-    aspect-ratio: 1;
-	border-radius: 20px;
-	overflow: hidden;
 	border: 1px solid var(--border-color);
-	flex-shrink: 0;
+	border-radius: 20px;
+    aspect-ratio: 1;
 }
 
 .ref-3d-widget canvas {
@@ -72,9 +72,9 @@
 .corner-selector {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	gap: 10px;
-	width: 100%;
 	box-sizing: border-box;
+	width: 100%;
+	gap: 10px;
 }
 
 .corner-selector .corner-row {
@@ -83,14 +83,14 @@
 }
 
 .corner-selector .corner-btn {
+	position: relative;
 	flex: 1;
 	padding: 7px 0;
-	border-radius: 5px;
 	border: 1px solid var(--border-color);
+	border-radius: 5px;
 	background-color: var(--background3-color);
 	cursor: pointer;
 	transition: background-color 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
-	position: relative;
 }
 
 .corner-selector .corner-btn:hover {
@@ -105,7 +105,6 @@
 
 /* Corner-specific accent colors (set via JS inline vars) */
 .corner-selector .corner-btn.marked::after {
-	content: '';
 	position: absolute;
 	top: 3px;
 	right: 3px;
@@ -114,22 +113,23 @@
 	border-radius: 50%;
 	background-color: var(--border-color);
 	opacity: 0.9;
+	content: '';
 }
 
 /* ---------- Video selector ---------- */
 .vid-selector {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	gap: 5px;
-	width: 100%;
 	box-sizing: border-box;
+	width: 100%;
+	gap: 5px;
 }
 
 .vid-selector .vid-btn {
 	width: 100%;
 	padding: 5px 0;
-	border-radius: 4px;
 	border: 1px solid var(--border-color);
+	border-radius: 4px;
 	background-color: var(--background3-color);
 	cursor: pointer;
 	transition: background-color 0.15s, color 0.15s;
@@ -140,112 +140,93 @@
 }
 
 .vid-selector .vid-btn.active {
-	background-color: var(--border-color);
 	border-color: var(--accent1-color);
+	background-color: var(--border-color);
 }
 
 .vid-selector .vid-btn.disabled {
-	opacity: 0.7;
-	cursor: not-allowed;
 	background-color: var(--background3-color);
+	cursor: not-allowed;
+	opacity: 0.7;
 }
 
 /* ---------- Viewport ---------- */
 .ref-viewport {
-	flex: 1;
-	overflow: hidden;
 	position: relative;
-	background: #000;
 	display: flex;
-	align-items: center;
+	overflow: hidden;
 	justify-content: center;
+	align-items: center;
+	flex: 1;
+	background: #000;
 	cursor: default;
 }
 
 /* Crosshair cursor only when hovering viewport */
-.ref-viewport.video-loaded {
+.ref-viewport {
 	cursor: crosshair;
 }
 
-.video-wrapper {
+.video-container {
 	position: relative;
 	display: inline-block;
 	/* size controlled by JS based on zoom/pan */
 }
 
-.video-wrapper video {
+.video-container video {
+	z-index: 5;
 	display: block;
 	max-width: none;
 	max-height: none;
 	/* width/height set by JS */
 }
 
-.video-wrapper canvas#ref-overlay {
+.video-container canvas#ref-overlay {
 	position: absolute;
 	top: 0;
 	left: 0;
+	z-index: 9;
 	pointer-events: none;
 	/* width/height set by JS */
 }
 
-/* ---------- Card footer / player ---------- */
-.card-footer {
+.ref-viewport .empty-video {
+	position: absolute;
 	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 6px 10px;
-	background-color: var(--header-bg, #16213e);
-	border-top: 1px solid var(--card-border, #2e2e4a);
-}
-
-.card-footer .playpause-btn {
-	background: transparent;
-	border: 1px solid var(--card-border, #2e2e4a);
-	border-radius: 4px;
-	color: var(--text-primary, #e0e0f0);
-	cursor: pointer;
-	padding: 4px 6px;
-	display: flex;
-	align-items: center;
 	justify-content: center;
-	transition: background-color 0.15s;
+	align-items: center;
+	color: var(--text2-color);
+	font-size: var(--text-xxs);
+	pointer-events: none;
+	inset: 0;
 }
 
-.card-footer .playpause-btn:hover {
-	background-color: var(--btn-hover-bg, #2a2a4a);
+.RefObjMarker .player {
+	position: absolute;
+	bottom: 30px;
+	z-index: 10;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 80%;
+	max-width: 1000px;
+	height: 50px;
+	padding: 0px 20px;
+	border-radius: 15px;
+	background-color: var(--background3-color);
+	cursor: default;
 }
 
-.card-footer .player-bar-wrap {
-	flex: 1;
-}
-
-.card-footer .player-bar {
-	width: 100%;
-	height: 6px;
-	-webkit-appearance: none;
-	appearance: none;
-	background: var(--card-border, #2e2e4a);
-	border-radius: 3px;
-	outline: none;
+.RefObjMarker .player button{
+	padding: 5px 15px;
+	border: 1px solid var(--border-color);
+	border-radius: 5px;
+	background-color: var(--background3-color);
+	font-size: var(--text-xxs);
 	cursor: pointer;
+	transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.card-footer .player-bar::-webkit-slider-thumb {
-	-webkit-appearance: none;
-	appearance: none;
-	width: 14px;
-	height: 14px;
-	border-radius: 50%;
-	background: var(--accent-border, #5555a0);
-	border: 2px solid var(--text-primary, #e0e0f0);
-	cursor: pointer;
-}
-
-.card-footer .player-bar::-moz-range-thumb {
-	width: 14px;
-	height: 14px;
-	border-radius: 50%;
-	background: var(--accent-border, #5555a0);
-	border: 2px solid var(--text-primary, #e0e0f0);
-	cursor: pointer;
+.RefObjMarker .player button:hover {
+	background-color: var(--border-color);
 }

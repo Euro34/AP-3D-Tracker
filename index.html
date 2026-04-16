@@ -403,7 +403,7 @@
             <button id="match-duration">Match duration</button>
         </div>
     </div>
-    <div class="RefObjMarker active">
+    <div class="RefObjMarker" id="RefObjMarker">
         <div class="toolbar">
             <div class="toolbar-left">
                 <img id="logo" src="AP_Logo.svg" alt="AP Tracker Logo">
@@ -429,14 +429,22 @@
                 </div>
 
                 <div class="vid-selector" id="vid-selector">
-                    <button class="vid-btn disabled active" id="vid-btn-a" data-vid="a">Cam A</button>
-                    <button class="vid-btn disabled" id="vid-btn-b" data-vid="b">Cam B</button>
+                    <button class="vid-btn active" id="vid-btn-a" data-vid="a">Camera A</button>
+                    <button class="vid-btn" id="vid-btn-b" data-vid="b">Camera B</button>
                 </div>
 			</div>
             <div class="ref-viewport" id="ref-viewport">
-                <div class="video-wrapper" id="video-wrapper">
-                    <video id="ref-video" loop muted playsinline></video>
+                <div class="video-container" id="video-container-ref">
+                    <video id="ref-video" muted playsinline></video>
                     <canvas id="ref-overlay"></canvas>
+                </div>
+                <div class="empty-video">No video</div>
+                <div class="player">
+                    <button class="play">▶&#xFE0E;</button>
+                    <div class="playBar">
+                        <div class="playhead"></div>
+                    </div>
+                    <div class="time">00:00/00:00</div>
                 </div>
             </div>
         </div>

@@ -18,11 +18,13 @@ Color Palette & Font Size
     --warning-color: #c48d2f;
     --danger-color: #d94a4a;
 
-    --info-color: #21498a;
+    /* --info-color: #21498a; */
 
 	--link-color: #9acbff;
 	--link-text-color: #10203c;
 	--link-border-color: #347ecd;
+
+	--playhead-color:#ffe341;
 
 	--text-xl: 1.875rem;
 	--text-l: 1.5rem;

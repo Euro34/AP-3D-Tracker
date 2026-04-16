@@ -2,7 +2,7 @@ import {Point_2D} from '../core/Types'
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// import { apTracker } from '../main';
+import { apTracker } from '../main';
 
 document.getElementById("open-refObjMarker")!.addEventListener("click", () => {
     document.querySelector(".RefObjMarker")!.classList.add("active");
@@ -12,6 +12,7 @@ document.getElementById("open-refObjMarker")!.addEventListener("click", () => {
 document.getElementById("close-refObjMarker")!.addEventListener("click", () => {
     document.querySelector(".RefObjMarker")!.classList.remove("active");
     document.getElementById("loading-screen")!.classList.remove("show");
+	refObjMarker.close();
 });
 
 // Color handler
@@ -22,35 +23,37 @@ function cornerColor(index: number): { r: number, g: number, b: number } {
 	return { r, g, b };
 }
 
-function cornerCss(index: number, alpha = 0.50): string {
-	const { r, g, b } = cornerColor(index);
-	return `rgba(${r},${g},${b},${alpha})`;
-}
+// function cornerCss(index: number, alpha = 0.50): string {
+// 	const { r, g, b } = cornerColor(index);
+// 	return `rgba(${r},${g},${b},${alpha})`;
+// }
 
 function cornerThreeColor(index: number): THREE.Color {
 	const { r, g, b } = cornerColor(index);
 	return new THREE.Color(r / 255, g / 255, b / 255);
 }
 
+// Separate video management
 class VideoState {
-    file: File = new File([], '');
-	frameTimestamps: number[] = [];
-	marks: Array<Point_2D | null> = Array(8).fill(null);
-	startFrame = 0;
-	endFrame = 0;
+    public file: File = new File([], '');
+	public frameTimestamps: number[] = [];
+	public marks: Array<Point_2D | null> = Array(8).fill(null);
+	public startFrame = 0;
+	public endFrame = 0;
 
     get hasVideo(): boolean {
 		return this.file.name !== '';
 	}
 
-    updateVideo(file: File, timestamps: number[], startFrame = 0, endFrame = 0) {
+    public updateVideo(file: File, timestamps: number[], startFrame = 0, endFrame = 0, marks: Array<Point_2D | null> = Array(8).fill(null)) {
 		this.file = file;
 		this.frameTimestamps = timestamps;
 		this.startFrame = startFrame;
-		this.endFrame = endFrame ?? Math.max(0, timestamps.length - 1);
+		this.endFrame = endFrame
+		this.marks = marks;
 	}
 
-    reset() {
+    public reset() {
 		this.file = new File([], '');
 		this.frameTimestamps = [];
 		this.marks = Array(8).fill(null);
@@ -58,26 +61,26 @@ class VideoState {
 		this.endFrame = 0;
 	}
 
-    getPoints(): Array<Point_2D | null> {
+    public getPoints(): Array<Point_2D | null> {
 		return [...this.marks];
 	}
 
-	setMark(cornerIndex: number, point: Point_2D): void {
+	public setMark(cornerIndex: number, point: Point_2D): void {
 		this.marks[cornerIndex] = point;
 	}
 
-	removeMark(cornerIndex: number): void {
+	public removeMark(cornerIndex: number): void {
 		this.marks[cornerIndex] = null;
 	}
 
-	markedCount(): number {
+	public markedCount(): number {
 		return this.marks.filter(Boolean).length;
 	}
 }
 
-// Handle video and marking
-class RefMarkerVideo {
-
+// One video, marking and pan/zoom
+class VideoMarker {
+	public selectedCorner = 0;
 }
 
 class Ref3DWidget {
@@ -96,20 +99,20 @@ class Ref3DWidget {
  
 	constructor() {
         const container = document.getElementById('ref-3d-widget')!;
-        this.W = container.clientWidth;
-        this.H = container.clientHeight;
 
 		this.renderer = new THREE.WebGLRenderer({ antialias: true });
-		this.renderer.setSize(this.W, this.H);
 		container.appendChild(this.renderer.domElement);
 
 		new ResizeObserver(() => {
 			const w = container.clientWidth;
 			const h = container.clientHeight;
-			this.renderer!.setSize(w, h);
-		}).observe(container);
 
-		this.render();
+			if (w === 0 || h === 0) return;
+			this.W = w;
+			this.H = h;
+			this.renderer.setSize(w, h);
+			this.render();
+		}).observe(container);
 	}
 
     cornerPosition(index: number, w: number, l: number, h: number): THREE.Vector3 {
@@ -232,13 +235,13 @@ class Ref3DWidget {
 }
 
 class RefObjMarker {
-	private fileCache = new Map<string, File>();
+	private fileCache: Map<string, { file: File; timestamps: number[] }> = new Map();
 
+	// private activeVideo: 'a' | 'b' = 'a';
 	private videoA = new VideoState();
 	private videoB = new VideoState();
 
-	private activeVideo: 'a' | 'b' = 'a';
-	private selectedCorner = 0;
+	private refMarkerVideo = new VideoMarker();
 
     private widget: Ref3DWidget | null = null;
 	private corner_btn: NodeListOf<HTMLButtonElement>;
@@ -258,17 +261,64 @@ class RefObjMarker {
 		this.vid_a_btn = document.getElementById("vid-btn-a") as HTMLButtonElement;
 		this.vid_b_btn = document.getElementById("vid-btn-b") as HTMLButtonElement;
 		this.vid_a_btn.addEventListener('click', () => this.selectVideo('a'));
+		this.vid_a_btn.setAttribute("disabled", "true");
+		this.vid_a_btn.classList.add("disabled");
 		this.vid_b_btn.addEventListener('click', () => this.selectVideo('b'));
+		this.vid_b_btn.setAttribute("disabled", "true");
+		this.vid_b_btn.classList.add("disabled");
 	}
 
-	updateVideo(files: File[], frameTimestamps: number[][], trimStates: number[] | null[]) {
+	public updateVideo(files: File[], frameTimestamps: number[][], trimState: (number|null)[]) {
 		const incoming = new Map<string, { file: File; timestamps: number[] }>();
 		files.forEach((f, i) => {
 			incoming.set(f.name, { file: f, timestamps: frameTimestamps[i] ?? [] });
 		});
+
+		// Sync cache
+		for (const name of this.fileCache.keys()) {
+			if (!incoming.has(name)) this.fileCache.delete(name);
+		}
+		for (const [name, data] of incoming) {
+			this.fileCache.set(name, data);
+		}
+
+		const aStillPresent = this.videoA.file.name !== "" && this.fileCache.has(this.videoA.file.name);
+		const bStillPresent = this.videoB.file.name !== "" && this.fileCache.has(this.videoB.file.name);
+
+		const bTrimSnapshot = bStillPresent ? { startFrame: this.videoB.startFrame, endFrame: this.videoB.endFrame,  marks: this.videoB.marks}: null;
+
+		if (!aStillPresent) this.videoA.reset();
+		if (!bStillPresent) this.videoB.reset();
+
+		// Shift B -> A
+		if (!this.videoA.hasVideo && this.videoB.hasVideo && bTrimSnapshot) {
+			this.videoA.updateVideo(this.videoB.file, this.videoB.frameTimestamps, bTrimSnapshot.startFrame, bTrimSnapshot.endFrame, bTrimSnapshot.marks);
+			this.videoB.reset();
+		}
+
+		const newFiles = [...this.fileCache.values()].filter(
+			d => d.file.name !== this.videoA.file.name && d.file.name !== this.videoB.file.name
+		);
+		for (const data of newFiles) {
+			if (!this.videoA.hasVideo) {
+				this.videoA.updateVideo(data.file, data.timestamps, trimState[0] ?? 0, trimState[1] ?? 0);
+			} else if (!this.videoB.hasVideo) {
+				this.videoB.updateVideo(data.file, data.timestamps, trimState[1] ?? 0, trimState[2] ?? 0);
+			}
+		}
+
+		this.selectVideo('a');
+		if (this.videoA.hasVideo) {
+			this.vid_a_btn.removeAttribute("disabled");
+			this.vid_a_btn.classList.remove("disabled");
+		}
+		if (this.videoB.hasVideo) {
+			this.vid_b_btn.removeAttribute("disabled");
+			this.vid_b_btn.classList.remove("disabled");
+		}
 	}
 
-	updateBoxDimensions(width: number | null, length: number | null, height: number | null) {
+	public updateBoxDimensions(width: number | null, length: number | null, height: number | null) {
         this.widget!.setDimensions(width ?? 0, length ?? 0, height ?? 0);
     }
 
@@ -276,13 +326,12 @@ class RefObjMarker {
 		this.corner_btn.forEach(btn => {btn.classList.remove("selected")});
 		this.corner_btn[index].classList.add("selected");
 
-		this.selectedCorner = index;
 		this.widget!.setSelectedCorner(index);
-		// this.refVideo.selectedCorner = index;
+		this.refMarkerVideo.selectedCorner = index;
 	}
 
 	private selectVideo(video: 'a' | 'b'): void {
-		this.activeVideo = video;
+		// this.activeVideo = video;
 		if (video === 'a') {
 			this.vid_a_btn.classList.add("active");
 			this.vid_b_btn.classList.remove("active");
@@ -290,6 +339,11 @@ class RefObjMarker {
 			this.vid_b_btn.classList.add("active");
 			this.vid_a_btn.classList.remove("active");
 		}
+	}
+
+	public close() {
+		const temp: Point_2D[][] = [];
+		apTracker.updateReferenceCorners(temp);
 	}
 }
 
