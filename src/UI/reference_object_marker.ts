@@ -14,7 +14,7 @@ document.getElementById("open-refObjMarker")!.addEventListener("click", () => {
 document.getElementById("close-refObjMarker")!.addEventListener("click", () => {
     document.querySelector(".RefObjMarker")!.classList.remove("active");
     document.getElementById("loading-screen")!.classList.remove("show");
-	refObjMarker.close();
+	refObjMarker.updateMain();
 });
 
 // Color handler
@@ -24,11 +24,6 @@ function cornerColor(index: number): { r: number, g: number, b: number } {
 	const b = (((index >> 2) & 1) * 200) + 50;
 	return { r, g, b };
 }
-
-// function cornerCss(index: number, alpha = 0.50): string {
-// 	const { r, g, b } = cornerColor(index);
-// 	return `rgba(${r},${g},${b},${alpha})`;
-// }
 
 function cornerThreeColor(index: number): THREE.Color {
 	const { r, g, b } = cornerColor(index);
@@ -66,20 +61,16 @@ class VideoState {
 		this.endFrame = 0;
 	}
 
-    public getPoints(): Array<Point2D | null> {
-		return [...this.marks];
+    public getPoints(): (Point2D | null)[] {
+		return this.marks;
 	}
 
-	public setMark(cornerIndex: number, point: Point2D): void {
+	public setMark(cornerIndex: number, point: Point2D) {
 		this.marks[cornerIndex] = point;
 	}
 
-	public removeMark(cornerIndex: number): void {
+	public removeMark(cornerIndex: number) {
 		this.marks[cornerIndex] = null;
-	}
-
-	public markedCount(): number {
-		return this.marks.filter(Boolean).length;
 	}
 }
 
@@ -95,6 +86,8 @@ class VideoManager {
 	private playhead = this.viewPort.querySelector(".playhead") as HTMLDivElement;
 	private timeDisplay = this.viewPort.querySelector(".time") as HTMLDivElement;
 
+	private deleteBtn = this.viewPort.querySelector(".delete") as HTMLButtonElement;
+
 	private isScrubbing = false;
 	private wasPlayingBeforeScrub = false;
 
@@ -107,25 +100,30 @@ class VideoManager {
 		this.videoState = state;
 
 		this.playBtn.addEventListener('click', () => this.togglePlay());
+		this.deleteBtn.addEventListener('click', () => this.deleteMark(this.selectedCorner));
+
 		this.video.addEventListener('timeupdate', () => this.updatePlayhead());
 
 		this.bindScrubEvents();
 
 		this.panZoom.onLeftClick = (pos) => {
 			if (!this.videoState.hasVideo) return;
-			this.videoState.marks[this.selectedCorner] = pos;
-			this.redrawMarks();
+			this.videoState.setMark(this.selectedCorner, pos);
+			this.drawMarks();
 		};
-		this.panZoom.onRightClick = (_) => {
+		this.panZoom.onMiddleClick = (pos) => {
 			if (!this.videoState.hasVideo) return;
-			this.videoState.marks[this.selectedCorner] = null;
-			this.redrawMarks();
+			this.deleteMarkAtPos(pos);
+		};
+		this.panZoom.onRedraw = () => {
+			if (!this.videoState.hasVideo) return;
+			this.drawMarks();
 		};
 	}
 
 	public updateSelectedCorner(index: number): void {
 		this.selectedCorner = index;
-		this.redrawMarks();
+		this.drawMarks();
 	}
 	
 	public updateVideoState(videoState: VideoState): void {
@@ -134,18 +132,20 @@ class VideoManager {
 
 		this.pause();
 		this.video.src = url;
-		this.video.load();
-
 		this.video.currentTime = videoState.currentTime;
+		this.video.load();
+		this.updatePlayhead();
 
 		if (videoState.hasVideo) {
 			this.viewPort.classList.add('video-loaded');
 		} else {
 			this.viewPort.classList.remove('video-loaded');
 		}
+		
 
-		this.panZoom.resetView();
-		this.updatePlayhead();
+		this.panZoom.fitCanvasToVideo();
+		this.drawMarks();
+		setTimeout(() => this.panZoom.resetView(), 200);
 	}
 
 	private togglePlay(): void {
@@ -225,10 +225,11 @@ class VideoManager {
 		this.playhead.style.left = `${progress * 100}%`;
 	}
 
-	public redrawMarks(): void {
+	public drawMarks(): void {
 		const ctx = this.overlay.getContext('2d')!;
 		const W = this.overlay.width;
 		const H = this.overlay.height;
+		const S = this.panZoom.OVERLAY_SCALE; // e.g. 2
 		ctx.clearRect(0, 0, W, H);
 
 		for (let i = 0; i < 8; i++) {
@@ -238,7 +239,7 @@ class VideoManager {
 			const cx = mark.x * W;
 			const cy = mark.y * H;
 			const { r, g, b } = cornerColor(i);
-			const radius = i === this.selectedCorner ? 7 : 5;
+			const radius = (i === this.selectedCorner ? 7 : 5) * S; // scale radius too
 
 			ctx.beginPath();
 			ctx.arc(cx, cy, radius, 0, Math.PI * 2);
@@ -248,9 +249,33 @@ class VideoManager {
 			ctx.beginPath();
 			ctx.arc(cx, cy, radius, 0, Math.PI * 2);
 			ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-			ctx.lineWidth = 1.5;
+			ctx.lineWidth = 1.5 * S;
 			ctx.stroke();
 		}
+	}
+
+	private deleteMarkAtPos(pos: Point2D): void {
+		const S = this.panZoom.OVERLAY_SCALE;
+
+		this.videoState.marks.forEach((mark, index) => {
+			if (!mark) return;
+
+			const dotRadiusPx = 7 * S;
+
+			const normRadiusX = dotRadiusPx / this.overlay.width;
+			const normRadiusY = dotRadiusPx / this.overlay.height;
+			const normRadius = (normRadiusX + normRadiusY) / 2;
+
+			const dist = Point2D.distanceBetween(pos, mark);
+			if (dist < normRadius * 1.5) {
+				this.deleteMark(index);
+			}
+		});
+	}
+
+	private deleteMark(index: number) {
+		this.videoState.removeMark(index);
+		this.drawMarks();
 	}
 }
 
@@ -456,14 +481,14 @@ class RefObjMarker {
 		const aStillPresent = this.videoA.file.name !== "" && this.fileCache.has(this.videoA.file.name);
 		const bStillPresent = this.videoB.file.name !== "" && this.fileCache.has(this.videoB.file.name);
 
-		const bTrimSnapshot = bStillPresent ? { startFrame: this.videoB.startFrame, endFrame: this.videoB.endFrame, currentTime: this.videoB.currentTime,  marks: this.videoB.marks}: null;
+		const bStateSnapshot = bStillPresent ? { currentTime: this.videoB.currentTime,  marks: this.videoB.marks}: null;
 
 		if (!aStillPresent) this.videoA.reset();
 		if (!bStillPresent) this.videoB.reset();
 
 		// Shift B -> A
-		if (!this.videoA.hasVideo && this.videoB.hasVideo && bTrimSnapshot) {
-			this.videoA.updateVideo(this.videoB.file, this.videoB.frameTimestamps, bTrimSnapshot.startFrame, bTrimSnapshot.endFrame, bTrimSnapshot.currentTime, bTrimSnapshot.marks);
+		if (!this.videoA.hasVideo && this.videoB.hasVideo && bStateSnapshot) {
+			this.videoA.updateVideo(this.videoB.file, this.videoB.frameTimestamps, trimState[2] ?? 0, trimState[3] ?? 0, bStateSnapshot.currentTime, bStateSnapshot.marks);
 			this.videoB.reset();
 		}
 
@@ -478,7 +503,6 @@ class RefObjMarker {
 			}
 		}
 
-		this.selectVideo('a');
 		if (this.videoA.hasVideo) {
 			this.vidABtn.removeAttribute("disabled");
 			this.vidABtn.classList.remove("disabled");
@@ -493,6 +517,9 @@ class RefObjMarker {
 			this.vidBBtn.setAttribute("disabled", "true");
 			this.vidBBtn.classList.add("disabled");
 		}
+
+		this.selectVideo('a')
+		this.updateMain();
 	}
 
 	public updateBoxDimensions(width: number | null, length: number | null, height: number | null) {
@@ -519,7 +546,7 @@ class RefObjMarker {
 		}
 	}
 
-	public close() {
+	public updateMain() {
 		apTracker.updateReferenceCorners([this.videoA.getPoints(), this.videoB.getPoints()]);
 	}
 }

@@ -23,6 +23,10 @@ export class Point2D {
         this.y = y;
     }
 
+    public static distanceBetween(p1: Point2D, p2: Point2D): number {
+        return Math.hypot((p1.x - p2.x), (p1.y - p2.y));
+    }
+
     toString(): string {
         const xStr = this.x === undefined ? 'uninitialized' : String(this.x);
         const yStr = this.y === undefined ? 'uninitialized' : String(this.y);

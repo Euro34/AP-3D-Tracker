@@ -13,6 +13,7 @@ class APTracker {
     trimStates: (number | null)[] = []; // [start1, end1, start2, end2] (in frames)
     referenceObject: ReferenceObject | null = null;
     referenceCorners: (Point2D | null)[][] = [];
+    projectionMatrix: number[][] = [];
 
     updateVideos(videos: File[]) {
         this.uploadedVideos = videos;
@@ -30,10 +31,9 @@ class APTracker {
         try {
             this.frameTimestamps = await extractAllFrameTimestamps(this.uploadedVideos);
             syncEditor.updateVideos(this.uploadedVideos, this.frameTimestamps);
-            console.log("Extracted frame timestamps:", this.frameTimestamps);
         } catch (error) {
-            console.error("Error extracting frame timestamps:", error);
             this.frameTimestamps = [];
+            console.error("Error extracting frame timestamps:", error);
         }
     }
 
@@ -45,7 +45,6 @@ class APTracker {
         const [duration1, duration2] = durations ?? [null, null];
         
         this.trimStates = [start1, end1, start2, end2];
-        console.log("Updating trim states:", this.trimStates);
         
         if (!trim1 || !trim2 || !durations) {
             updateStatus("Sync", "");
@@ -54,8 +53,9 @@ class APTracker {
         } else {
             updateStatus("Sync", "inprogress");
         }
-
+        
         refObjMarker.updateVideo(this.uploadedVideos, this.frameTimestamps, this.trimStates);
+        console.log("Updating trim states:", this.trimStates);
     }
 
     updateReferenceObject(width: number | null, length: number | null, height: number | null) {
@@ -96,7 +96,6 @@ class APTracker {
         } else {
             updateStatus("RefCorner", "");
         }
-
 
         console.log("Updated reference corners:", this.referenceCorners);
     }
