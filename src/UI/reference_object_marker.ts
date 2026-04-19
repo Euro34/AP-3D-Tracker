@@ -37,18 +37,21 @@ class VideoState {
 	public marks: (Point2D | null)[] = Array(8).fill(null);
 	public startFrame = 0;
 	public endFrame = 0;
-	public currentTime = 0;
+	private _currentTime = 0;
 
     get hasVideo(): boolean { return this.file.size > 0 && this.frameTimestamps.length > 0; }
 	get startTime(): number { return this.frameTimestamps[this.startFrame] ?? 0; }
 	get endTime(): number { return this.frameTimestamps[this.endFrame] ?? 0; }
+	get currentTime(): number { return this._currentTime; }
 	get duration(): number { return this.endTime - this.startTime; }
 
-    public updateVideo(file: File, timestamps: number[], startFrame = 0, endFrame = 0, currentTime : number | null = null, marks: (Point2D | null)[] = Array(8).fill(null)) {
+	set currentTime(time: number) {
+		this._currentTime = Math.min(Math.max(time, this.startTime), this.endTime);
+	}
+
+    public updateVideo(file: File, timestamps: number[], currentTime : number | null = null, marks: (Point2D | null)[] = Array(8).fill(null)) {
 		this.file = file;
 		this.frameTimestamps = timestamps;
-		this.startFrame = startFrame;
-		this.endFrame = endFrame;
 		this.currentTime = currentTime ?? this.startTime;
 		this.marks = marks;
 	}
@@ -56,7 +59,7 @@ class VideoState {
 	public updateTrim(startFrame: number, endFrame: number) {
 		this.startFrame = startFrame;
 		this.endFrame = endFrame;
-		this.currentTime = Math.max(this.currentTime, this.startTime);
+		this.currentTime = Math.min(Math.max(this.currentTime, this.startTime), this.endTime);
 	}
 
     public reset() {
@@ -133,14 +136,15 @@ class VideoManager {
 		}
 
 		this.pause();
+		this.video.load();
 		
-		this.video.addEventListener('loadedmetadata', () => {
-			this.video.currentTime = videoState.currentTime;
-			this.updatePlayhead();		
-			setTimeout(() => {this.panZoom.resetView();}, 500);
+		this.video.addEventListener('loadeddata', () => {
+			this.video.currentTime = this.videoState.currentTime
+			this.updatePlayhead();
+			this.panZoom.resetView();
 			this.panZoom.fitCanvasToVideo();
 			this.drawMarks();
-		});
+		}, { once: true });
 	}
 
 	private togglePlay(): void {
@@ -430,10 +434,11 @@ class Ref3DWidget {
 class RefObjMarker {
 	private fileCache: Map<string, { file: File; timestamps: number[] }> = new Map();
 
-	private videoA = new VideoState();
-	private videoB = new VideoState();
+	private stateA = new VideoState();
+	private stateB = new VideoState();
+	private activeState: 'a' | 'b' = 'a';
 
-	private refMarkerVideo = new VideoManager(this.videoA);
+	private refMarkerVideo = new VideoManager(this.stateA);
 
     private widget: Ref3DWidget;
 	private cornerBtn: NodeListOf<HTMLButtonElement>;
@@ -461,7 +466,7 @@ class RefObjMarker {
 		this.vidBBtn.classList.add("disabled");
 	}
 
-	public updateVideo(files: File[], frameTimestamps: number[][], trimState: (number|null)[]) {
+	public updateVideo(files: File[], frameTimestamps: number[][]) {
 		const incoming = new Map<string, { file: File; timestamps: number[] }>();
 		files.forEach((f, i) => {
 			incoming.set(f.name, { file: f, timestamps: frameTimestamps[i] ?? [] });
@@ -475,56 +480,53 @@ class RefObjMarker {
 			this.fileCache.set(name, data);
 		}
 
-		const aStillPresent = this.videoA.file.name !== "" && this.fileCache.has(this.videoA.file.name);
-		const bStillPresent = this.videoB.file.name !== "" && this.fileCache.has(this.videoB.file.name);
+		const aStillPresent = this.stateA.file.name !== "" && this.fileCache.has(this.stateA.file.name);
+		const bStillPresent = this.stateB.file.name !== "" && this.fileCache.has(this.stateB.file.name);
 
-		const bStateSnapshot = bStillPresent ? { currentTime: this.videoB.currentTime,  marks: this.videoB.marks}: null;
+		const bStateSnapshot = bStillPresent ? { currentTime: this.stateB.currentTime,  marks: this.stateB.marks}: null;
 
-		if (!aStillPresent) {
-			this.videoA.reset();
-		} else {
-			this.videoA.updateTrim(trimState[0] ?? 0, trimState[1] ?? 0);
-		}
-		if (!bStillPresent) {
-			this.videoB.reset();
-		} else {
-			this.videoB.updateTrim(trimState[2] ?? 0, trimState[3] ?? 0);
-		}
+		if (!aStillPresent) this.stateA.reset();
+		if (!bStillPresent) this.stateB.reset();
 
 		// Shift B -> A
-		if (!this.videoA.hasVideo && this.videoB.hasVideo && bStateSnapshot) {
-			this.videoA.updateVideo(this.videoB.file, this.videoB.frameTimestamps, trimState[2] ?? 0, trimState[3] ?? 0, bStateSnapshot.currentTime, bStateSnapshot.marks);
-			this.videoB.reset();
+		if (!this.stateA.hasVideo && this.stateB.hasVideo && bStateSnapshot) {
+			this.stateA.updateVideo(this.stateB.file, this.stateB.frameTimestamps, bStateSnapshot.currentTime, bStateSnapshot.marks);
+			this.stateB.reset();
 		}
 
 		const newFiles = [...this.fileCache.values()].filter(
-			d => d.file.name !== this.videoA.file.name && d.file.name !== this.videoB.file.name
+			d => d.file.name !== this.stateA.file.name && d.file.name !== this.stateB.file.name
 		);
 		for (const data of newFiles) {
-			if (!this.videoA.hasVideo) {
-				this.videoA.updateVideo(data.file, data.timestamps, trimState[0] ?? 0, trimState[1] ?? 0);
-			} else if (!this.videoB.hasVideo) {
-				this.videoB.updateVideo(data.file, data.timestamps, trimState[2] ?? 0, trimState[3] ?? 0);
+			if (!this.stateA.hasVideo) {
+				this.stateA.updateVideo(data.file, data.timestamps);
+			} else if (!this.stateB.hasVideo) {
+				this.stateB.updateVideo(data.file, data.timestamps);
 			}
 		}
 
-		if (this.videoA.hasVideo) {
-			this.vidABtn.removeAttribute("disabled");
-			this.vidABtn.classList.remove("disabled");
-		} else {
-			this.vidABtn.setAttribute("disabled", "true");
-			this.vidABtn.classList.add("disabled");
-		}
-		if (this.videoB.hasVideo) {
-			this.vidBBtn.removeAttribute("disabled");
-			this.vidBBtn.classList.remove("disabled");
-		} else {
-			this.vidBBtn.setAttribute("disabled", "true");
-			this.vidBBtn.classList.add("disabled");
-		}
-
-		this.selectVideo('a')
+		this.syncButtonStates();
+		this.selectVideo('a');
 		this.updateMain();
+	}
+
+	private syncButtonStates(): void {
+		this.vidABtn.toggleAttribute('disabled', !this.stateA.hasVideo);
+		this.vidABtn.classList.toggle('disabled', !this.stateA.hasVideo);
+		this.vidBBtn.toggleAttribute('disabled', !this.stateB.hasVideo);
+		this.vidBBtn.classList.toggle('disabled', !this.stateB.hasVideo);
+	}
+
+	public updateTrim(trimStates: (number|null)[]) {
+		const [start1, end1, start2, end2] = trimStates;
+		if (start1 !== null && end1 !== null) {
+			this.stateA.updateTrim(start1, end1);
+		}
+		if (start2 !== null && end2 !== null) {
+			this.stateB.updateTrim(start2, end2);
+		}
+		
+		this.selectVideo(this.activeState);
 	}
 
 	public updateBoxDimensions(width: number | null, length: number | null, height: number | null) {
@@ -543,16 +545,16 @@ class RefObjMarker {
 		if (video === 'a') {
 			this.vidABtn.classList.add("active");
 			this.vidBBtn.classList.remove("active");
-			this.refMarkerVideo.updateVideoState(this.videoA);
+			this.refMarkerVideo.updateVideoState(this.stateA);
 		} else {
 			this.vidBBtn.classList.add("active");
 			this.vidABtn.classList.remove("active");
-			this.refMarkerVideo.updateVideoState(this.videoB);
+			this.refMarkerVideo.updateVideoState(this.stateB);
 		}
 	}
 
 	public updateMain() {
-		apTracker.updateReferenceCorners([this.videoA.marks, this.videoB.marks]);
+		apTracker.updateReferenceCorners([this.stateA.marks, this.stateB.marks]);
 	}
 }
 

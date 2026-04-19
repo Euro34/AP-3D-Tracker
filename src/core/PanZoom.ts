@@ -4,6 +4,7 @@ export class PanZoom {
 	private content: HTMLVideoElement;
 	private overlay: HTMLCanvasElement;
 
+    private needsTransform = false;
     public readonly OVERLAY_SCALE = 2;
 	private zoom = 1;
 	private panX = 0;
@@ -33,6 +34,14 @@ export class PanZoom {
 		this.content = content;
 		this.overlay = overlay;
 		this.bindEvents();
+
+        new ResizeObserver(() => {
+            if (this.viewPort.clientWidth === 0 || this.viewPort.clientHeight === 0) return;
+            if (this.needsTransform) {
+                this.needsTransform = false;
+                this.applyTransform();
+            }
+        }).observe(this.viewPort);
 	}
 
 	public resetView(): void {
@@ -144,12 +153,17 @@ export class PanZoom {
         const vpW = this.viewPort.clientWidth;
         const vpH = this.viewPort.clientHeight;
 
+        if (vpW === 0 || vpH === 0) {
+            this.needsTransform = true;
+            return;
+        }
+        
         const vw = this.content.videoWidth || vpW;
         const vh = this.content.videoHeight || vpH;
         const scale = Math.min(vpW / vw, vpH / vh);
         const fitW = vw * scale * this.zoom;
         const fitH = vh * scale * this.zoom;
-
+        
         this.container.style.width = `${fitW}px`;
         this.container.style.height = `${fitH}px`;
         this.content.style.width = `${fitW}px`;

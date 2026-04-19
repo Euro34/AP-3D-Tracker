@@ -39,6 +39,7 @@ class APTracker {
         
         try {
             this.frameTimestamps = await extractAllFrameTimestamps(this.uploadedVideos, signal);
+            refObjMarker.updateVideo(this.uploadedVideos, this.frameTimestamps);
             syncEditor.updateVideos(this.uploadedVideos, this.frameTimestamps);
         } catch (error: any) {
             this.frameTimestamps = [];
@@ -66,8 +67,8 @@ class APTracker {
         } else {
             updateStatus("Sync", "inprogress");
         }
-        
-        refObjMarker.updateVideo(this.uploadedVideos, this.frameTimestamps, this.trimStates);
+
+        refObjMarker.updateTrim(this.trimStates);
     }
 
     public updateReferenceObject(width: number | null, length: number | null, height: number | null) {
