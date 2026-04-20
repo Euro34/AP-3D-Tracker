@@ -12,14 +12,14 @@
     background-color: var(--link-border-color);
 }
 
-.cam-container {
+.card#Sync .card-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
     width: 100%;
     gap: 20px;
 }
 
-.cam {
+.card#Sync .camera {
     display: flex;
     flex-direction: column;
     width: 100%;

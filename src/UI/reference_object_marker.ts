@@ -641,30 +641,32 @@ class Ref3DWidget {
 class RefObjMarker {
 	private fileCache: Map<string, { file: File; timestamps: number[] }> = new Map();
 
+	private cardA = document.getElementById("ref-corner-A") as HTMLDivElement;
+	private cardB = document.getElementById("ref-corner-B") as HTMLDivElement;
+	private markedCountA = this.cardA.querySelector(".marked-count") as HTMLParagraphElement;
+	private markedCountB = this.cardB.querySelector(".marked-count") as HTMLParagraphElement;
+	private cornerStatusesA = this.cardA.querySelectorAll<HTMLDivElement>(".corner-status");
+	private cornerStatusesB = this.cardB.querySelectorAll<HTMLDivElement>(".corner-status");
+
+
 	private stateA = new VideoState();
 	private stateB = new VideoState();
 	private activeState: 'a' | 'b' = 'a';
 
 	private refMarkerVideo = new VideoManager(this.stateA);
 
-    private widget: Ref3DWidget;
-	private cornerBtn: NodeListOf<HTMLButtonElement>;
-	private vidABtn: HTMLButtonElement;
-	private vidBBtn: HTMLButtonElement;
+    private widget = new Ref3DWidget();
+	private cornerBtn = document.querySelectorAll<HTMLButtonElement>(".corner-btn");
+	private vidABtn = document.getElementById("vid-btn-a") as HTMLButtonElement;
+	private vidBBtn = document.getElementById("vid-btn-b") as HTMLButtonElement;
 
     constructor() {
-		this.widget = new Ref3DWidget();
-
-		this.cornerBtn = document.querySelectorAll<HTMLButtonElement>(".corner-btn")
-		this.cornerBtn.forEach(btn => {
+		this.cornerBtn.forEach((btn,idx) => {
 			btn.addEventListener('click', () => {
-				const idx = parseInt(btn.dataset.corner!);
 				this.selectCorner(idx);
 			});
 		});
 
-		this.vidABtn = document.getElementById("vid-btn-a") as HTMLButtonElement;
-		this.vidBBtn = document.getElementById("vid-btn-b") as HTMLButtonElement;
 		this.vidABtn.addEventListener('click', () => this.selectVideo('a'));
 		this.vidABtn.setAttribute("disabled", "true");
 		this.vidABtn.classList.add("disabled");
@@ -762,6 +764,41 @@ class RefObjMarker {
 
 	public updateMain() {
 		apTracker.updateReferenceCorners([this.stateA.marks, this.stateB.marks]);
+
+		// Update card
+		const countA = this.stateA.marks.filter(m => m !== null).length;
+		const countB = this.stateB.marks.filter(m => m !== null).length;
+		this.markedCountA.textContent = `${countA} corner${countA !== 1 ? 's' : ''} marked`;
+		this.markedCountB.textContent = `${countB} corner${countB !== 1 ? 's' : ''} marked`;
+
+		this.cardA.classList.remove("done", "inprogress");
+		if (countA >= 6) {
+			this.cardA.classList.add("done");
+		} else if (countA > 0) {
+			this.cardA.classList.add("inprogress");
+		}
+
+		this.cardB.classList.remove("done", "inprogress");
+		if (countB >= 6) {
+			this.cardB.classList.add("done");
+		} else if (countB > 0) {
+			this.cardB.classList.add("inprogress");
+		}
+
+		this.cornerStatusesA.forEach((el, idx) => {
+			if (this.stateA.marks[idx]) {
+				el.classList.add("done");
+			} else {
+				el.classList.remove("done");
+			}
+		});
+		this.cornerStatusesB.forEach((el, idx) => {
+			if (this.stateB.marks[idx]) {
+				el.classList.add("done");
+			} else {
+				el.classList.remove("done");
+			}
+		});
 	}
 }
 

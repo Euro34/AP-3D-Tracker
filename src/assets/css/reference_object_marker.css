@@ -12,6 +12,60 @@
     background-color: var(--link-border-color);
 }
 
+.card#RefCorner .card-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    gap: 20px;
+}
+
+.card#RefCorner .camera {
+	display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    gap: 20px;
+}
+
+.card#RefCorner .camera.inprogress {
+	border-color: var(--warning-color);
+}
+
+.card#RefCorner .camera.done {
+	border-color: var(--success-color);
+}
+
+.card#RefCorner .camera .head {
+	display: flex;
+	justify-content: space-between;
+	padding: 0 3px;
+}
+
+.corner-statuses-container {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+.corner-status {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 3px 10px;
+	border: 1px solid var(--border-color);
+    border-radius: 15px;
+	color: var(--text2-color);
+	font-size: var(--text-xxs);
+}
+
+.corner-status.done {
+	border-color: var(--success-color);
+	background-color: var(--success-color);
+	color: var(--background1-color);
+}
+
 /* Reference Object Marker */
 .RefObjMarker {
     position: fixed;
@@ -116,7 +170,7 @@
 	content: '';
 }
 
-/* ---------- Video selector ---------- */
+/* Video Selector */
 .vid-selector {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -150,7 +204,6 @@
 	opacity: 0.7;
 }
 
-/* ---------- Viewport ---------- */
 .ref-viewport {
 	position: relative;
 	display: flex;
@@ -162,7 +215,6 @@
 	cursor: default;
 }
 
-/* Crosshair cursor only when hovering viewport */
 .ref-viewport.video-loaded {
 	cursor: crosshair;
 }

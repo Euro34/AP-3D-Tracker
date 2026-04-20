@@ -129,56 +129,54 @@
                         </div>
                     </div>
                     <div class="card-content">
-                        <div class="cam-container">
-                            <div class="cam">
-                                Camera A
-                                <div class="data-container">
-                                    <div class="info" id="start-time-A">
-                                        <p class="header">Start time</p>
-                                        <div class="value-unit">
-                                            <p class="value">-</p>
-                                            <p class="unit">s</p>
-                                        </div>
+                        <div class="camera">
+                            Camera A
+                            <div class="data-container">
+                                <div class="info" id="start-time-A">
+                                    <p class="header">Start time</p>
+                                    <div class="value-unit">
+                                        <p class="value">-</p>
+                                        <p class="unit">s</p>
                                     </div>
-                                    <div class="info" id="end-time-A">
-                                        <p class="header">End time</p>
-                                        <div class="value-unit">
-                                            <p class="value">-</p>
-                                            <p class="unit">s</p>
-                                        </div>
+                                </div>
+                                <div class="info" id="end-time-A">
+                                    <p class="header">End time</p>
+                                    <div class="value-unit">
+                                        <p class="value">-</p>
+                                        <p class="unit">s</p>
                                     </div>
-                                    <div class="info" id="duration-A">
-                                        <p class="header">Duration</p>
-                                        <div class="value-unit">
-                                            <p class="value">-</p>
-                                            <p class="unit">s</p>
-                                        </div>
+                                </div>
+                                <div class="info" id="duration-A">
+                                    <p class="header">Duration</p>
+                                    <div class="value-unit">
+                                        <p class="value">-</p>
+                                        <p class="unit">s</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="cam">
-                                Camera B
-                                <div class="data-container">
-                                    <div class="info" id="start-time-B">
-                                        <p class="header">Start time</p>
-                                        <div class="value-unit">
-                                            <p class="value">-</p>
-                                            <p class="unit">s</p>
-                                        </div>
+                        </div>
+                        <div class="camera">
+                            Camera B
+                            <div class="data-container">
+                                <div class="info" id="start-time-B">
+                                    <p class="header">Start time</p>
+                                    <div class="value-unit">
+                                        <p class="value">-</p>
+                                        <p class="unit">s</p>
                                     </div>
-                                    <div class="info" id="end-time-B">
-                                        <p class="header">End time</p>
-                                        <div class="value-unit">
-                                            <p class="value">-</p>
-                                            <p class="unit">s</p>
-                                        </div>
+                                </div>
+                                <div class="info" id="end-time-B">
+                                    <p class="header">End time</p>
+                                    <div class="value-unit">
+                                        <p class="value">-</p>
+                                        <p class="unit">s</p>
                                     </div>
-                                    <div class="info" id="duration-B">
-                                        <p class="header">Duration</p>
-                                        <div class="value-unit">
-                                            <p class="value">-</p>
-                                            <p class="unit">s</p>
-                                        </div>
+                                </div>
+                                <div class="info" id="duration-B">
+                                    <p class="header">Duration</p>
+                                    <div class="value-unit">
+                                        <p class="value">-</p>
+                                        <p class="unit">s</p>
                                     </div>
                                 </div>
                             </div>
@@ -226,7 +224,38 @@
                         </div>
                     </div>
                     <div class="card-content">
-                        
+                        <div class="camera" id="ref-corner-A">
+                            <div class="head">
+                                Camera A
+                                <p class="marked-count">0 corner marked</p>
+                            </div>
+                            <div class="corner-statuses-container">
+                                <div class="corner-status" title="Bottom · Front · Left">Bottom · Front · Left</div>
+                                <div class="corner-status" title="Bottom · Front · Right">Bottom · Front · Right</div>
+                                <div class="corner-status" title="Bottom · Back · Left">Bottom · Back · Left</div>
+                                <div class="corner-status" title="Bottom · Back · Right">Bottom · Back · Right</div>
+                                <div class="corner-status" title="Top · Front · Left">Top · Front · Left</div>
+                                <div class="corner-status" title="Top · Front · Right">Top · Front · Right</div>
+                                <div class="corner-status" title="Top · Back · Left">Top · Back · Left</div>
+                                <div class="corner-status" title="Top · Back · Right">Top · Back · Right</div>
+                            </div>
+                        </div>
+                        <div class="camera" id="ref-corner-B">
+                            <div class="head">
+                                Camera B
+                                <p class="marked-count">0 corner marked</p>
+                            </div>
+                            <div class="corner-statuses-container">
+                                <div class="corner-status" title="Bottom · Front · Left">Bottom · Front · Left</div>
+                                <div class="corner-status" title="Bottom · Front · Right">Bottom · Front · Right</div>
+                                <div class="corner-status" title="Bottom · Back · Left">Bottom · Back · Left</div>
+                                <div class="corner-status" title="Bottom · Back · Right">Bottom · Back · Right</div>
+                                <div class="corner-status" title="Top · Front · Left">Top · Front · Left</div>
+                                <div class="corner-status" title="Top · Front · Right">Top · Front · Right</div>
+                                <div class="corner-status" title="Top · Back · Left">Top · Back · Left</div>
+                                <div class="corner-status" title="Top · Back · Right">Top · Back · Right</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="card" id="TargetObj">
@@ -420,14 +449,14 @@
                 <div class="ref-3d-widget" id="ref-3d-widget"></div>
 
                 <div class="corner-selector" id="corner-selector">
-                    <button class="corner-btn selected" data-corner="0" title="Bottom · Front · Left">Bottom · Front · Left</button>
-                    <button class="corner-btn" data-corner="1" title="Bottom · Front · Right">Bottom · Front · Right</button>
-                    <button class="corner-btn" data-corner="2" title="Bottom · Back · Left">Bottom · Back · Left</button>
-                    <button class="corner-btn" data-corner="3" title="Bottom · Back · Right">Bottom · Back · Right</button>
-                    <button class="corner-btn" data-corner="4" title="Top · Front · Left">Top · Front · Left</button>
-                    <button class="corner-btn" data-corner="5" title="Top · Front · Right">Top · Front · Right</button>
-                    <button class="corner-btn" data-corner="6" title="Top · Back · Left">Top · Back · Left</button>
-                    <button class="corner-btn" data-corner="7" title="Top · Back · Right">Top · Back · Right</button>
+                    <button class="corner-btn selected" title="Bottom · Front · Left">Bottom · Front · Left</button>
+                    <button class="corner-btn" title="Bottom · Front · Right">Bottom · Front · Right</button>
+                    <button class="corner-btn" title="Bottom · Back · Left">Bottom · Back · Left</button>
+                    <button class="corner-btn" title="Bottom · Back · Right">Bottom · Back · Right</button>
+                    <button class="corner-btn" title="Top · Front · Left">Top · Front · Left</button>
+                    <button class="corner-btn" title="Top · Front · Right">Top · Front · Right</button>
+                    <button class="corner-btn" title="Top · Back · Left">Top · Back · Left</button>
+                    <button class="corner-btn" title="Top · Back · Right">Top · Back · Right</button>
                 </div>
 
                 <div class="vid-selector" id="vid-selector">
