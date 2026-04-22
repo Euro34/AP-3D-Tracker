@@ -124,7 +124,6 @@ class VideoHandler {
         return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}:${String(secondToFrame).padStart(2, "0")}`;
     }
 
-
 	// Playback
 	public togglePlay() {
         if (this.isPaused) {
@@ -612,24 +611,24 @@ class SyncEditor {
 	}
 
 	// Return
-	private getTrimState(): (number[] | null)[] {
+	private getTrimState(): (number | null)[] {
 		return [
-			this.videoA.hasVideo ? [this.videoA.startFrame, this.videoA.endFrame] : null,
-			this.videoB.hasVideo ? [this.videoB.startFrame, this.videoB.endFrame] : null,
-			this.videoA.hasVideo && this.videoB.hasVideo ? [this.videoA.duration, this.videoB.duration,] : null
+			this.videoA.hasVideo ? this.videoA.startFrame : null,
+			this.videoA.hasVideo ? this.videoA.endFrame : null,
+			this.videoB.hasVideo ? this.videoB.startFrame : null,
+			this.videoB.hasVideo ? this.videoB.endFrame : null,
 		];
 	}
 
 	private updateMain() {
 		apTracker.updateSync(this.getTrimState());
-		const format = (n: number) => (Math.round(n * 1000) / 1000).toString();
 
 		if (this.videoA.hasVideo) {
 			const startATime = this.videoA.timeAtFrame(this.videoA.startFrame);
 			const endATime = this.videoA.timeAtFrame(this.videoA.endFrame);
-			this.startA.textContent = format(startATime);
-			this.endA.textContent = format(endATime);
-			this.durationA.textContent = format(endATime - startATime);
+			this.startA.textContent = startATime.toFixed(3);
+			this.endA.textContent = endATime.toFixed(3);
+			this.durationA.textContent = (endATime - startATime).toFixed(3);
 		} else {
 			this.startA.textContent = "-";
 			this.endA.textContent = "-";
@@ -639,9 +638,9 @@ class SyncEditor {
 		if (this.videoB.hasVideo) {
 			const startBTime = this.videoB.timeAtFrame(this.videoB.startFrame);
 			const endBTime = this.videoB.timeAtFrame(this.videoB.endFrame);
-			this.startB.textContent = format(startBTime);
-			this.endB.textContent = format(endBTime);
-			this.durationB.textContent = format(endBTime - startBTime);
+			this.startB.textContent = startBTime.toFixed(3);
+			this.endB.textContent = endBTime.toFixed(3);
+			this.durationB.textContent = (endBTime - startBTime).toFixed(3);
 		} else {
 			this.startB.textContent = "-";
 			this.endB.textContent = "-";
@@ -654,6 +653,34 @@ class SyncEditor {
 		if (this.linked) {
 			this.toggleLink();
 		}
+	}
+
+	public imported(files: File[], frameTimestamps: number[][], trimStates: (number | null)[]) {
+		if (files.length === 0) return;
+		if (files[0]) {
+			this.videoA.updateVideo(files[0], frameTimestamps[0], trimStates[0], trimStates[1]);
+		} else {
+			if (trimStates[0] !== null) {
+				this.videoA.startFrame = trimStates[0] ?? 0;
+			}
+			if (trimStates[1] !== null) {
+				this.videoA.endFrame = trimStates[1] ?? 0;
+			}
+			this.videoA.updateTrimDisplay();
+		}
+		if (files[1]) {
+			this.videoB.updateVideo(files[1], frameTimestamps[1], trimStates[2], trimStates[3]);
+		}
+		const startATime = this.videoA.timeAtFrame(this.videoA.startFrame);
+		const endATime = this.videoA.timeAtFrame(this.videoA.endFrame);
+		this.startA.textContent = startATime.toFixed(3);
+		this.endA.textContent = endATime.toFixed(3);
+		this.durationA.textContent = (endATime - startATime).toFixed(3);
+		const startBTime = this.videoB.timeAtFrame(this.videoB.startFrame);
+		const endBTime = this.videoB.timeAtFrame(this.videoB.endFrame);
+		this.startB.textContent = startBTime.toFixed(3);
+		this.endB.textContent = endBTime.toFixed(3);
+		this.durationB.textContent = (endBTime - startBTime).toFixed(3);
 	}
 }
 

@@ -44,6 +44,12 @@
     transition: background-color 0.3s ease;
 }
 
+.toolbar-right button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: transparent !important;
+}
+
 .toolbar-right button:hover {
     background-color: var(--background3-color);
 }

@@ -761,9 +761,11 @@ class RefObjMarker {
 	}
 
 	public updateMain() {
+		this.updateCard();
 		apTracker.updateReferenceCorners([this.stateA.marks, this.stateB.marks]);
+	}
 
-		// Update card
+	private updateCard() {
 		const countA = this.stateA.marks.filter(m => m !== null).length;
 		const countB = this.stateB.marks.filter(m => m !== null).length;
 		this.markedCountA.textContent = `${countA} corner${countA !== 1 ? 's' : ''} marked`;
@@ -798,6 +800,10 @@ class RefObjMarker {
 			}
 		});
 	}
+
+	// public imported(videos: File[], frameTimestamps: number[][], trimStates: (number|null)[], referenceCorners: (Point2D | null)[][]) {
+	// 	this.stateA
+	// }
 }
 
 export let refObjMarker = new RefObjMarker();
