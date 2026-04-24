@@ -2,20 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { Point2D } from '../core/Types'
+import { VideoState } from '../core/VideoState'
 import { PanZoom } from '../core/PanZoom';
-
-import { apTracker } from '../main';
-
-document.getElementById("open-refObjMarker")!.addEventListener("click", () => {
-    document.querySelector(".RefObjMarker")!.classList.add("active");
-    document.getElementById("loading-screen")!.classList.add("show");
-});
-
-document.getElementById("close-refObjMarker")!.addEventListener("click", () => {
-    document.querySelector(".RefObjMarker")!.classList.remove("active");
-    document.getElementById("loading-screen")!.classList.remove("show");
-	refObjMarker.updateMain();
-});
 
 // Color handler
 function cornerColor(index: number): { r: number, g: number, b: number } {
@@ -28,47 +16,6 @@ function cornerColor(index: number): { r: number, g: number, b: number } {
 function cornerThreeColor(index: number): THREE.Color {
 	const { r, g, b } = cornerColor(index);
 	return new THREE.Color(r / 255, g / 255, b / 255);
-}
-
-// Separate video management
-class VideoState {
-    public file: File = new File([], '');
-	public frameTimestamps: number[] = [];
-	public marks: (Point2D | null)[] = Array(8).fill(null);
-	public startFrame = 0;
-	public endFrame = 0;
-	private _currentTime = 0;
-
-    get hasVideo(): boolean { return this.file.size > 0 && this.frameTimestamps.length > 0; }
-	get startTime(): number { return this.frameTimestamps[this.startFrame] ?? 0; }
-	get endTime(): number { return this.frameTimestamps[this.endFrame] ?? 0; }
-	get currentTime(): number { return this._currentTime; }
-	get duration(): number { return this.endTime - this.startTime; }
-
-	set currentTime(time: number) {
-		this._currentTime = Math.min(Math.max(time, this.startTime), this.endTime);
-	}
-
-    public updateVideo(file: File, timestamps: number[], currentTime : number | null = null, marks: (Point2D | null)[] = Array(8).fill(null)) {
-		this.file = file;
-		this.frameTimestamps = timestamps;
-		this.currentTime = currentTime ?? this.startTime;
-		this.marks = marks;
-	}
-
-	public updateTrim(startFrame: number, endFrame: number) {
-		this.startFrame = startFrame;
-		this.endFrame = endFrame;
-		this.currentTime = Math.min(Math.max(this.currentTime, this.startTime), this.endTime);
-	}
-
-    public reset() {
-		this.file = new File([], '');
-		this.frameTimestamps = [];
-		this.marks = Array(8).fill(null);
-		this.startFrame = 0;
-		this.endFrame = 0;
-	}
 }
 
 // One video and marking
@@ -108,7 +55,7 @@ class VideoManager {
 
 		this.panZoom.onLeftClick = (pos) => {
 			if (!this.videoState.hasVideo) return;
-			this.videoState.marks[this.selectedCorner] = pos;
+			this.videoState.refObjMarks[this.selectedCorner] = pos;
 			this.drawMarks();
 		};
 		this.panZoom.onMiddleClick = (pos) => {
@@ -241,7 +188,7 @@ class VideoManager {
 		ctx.clearRect(0, 0, W, H);
 
 		for (let i = 0; i < 8; i++) {
-			const mark = this.videoState.marks[i];
+			const mark = this.videoState.refObjMarks[i];
 			if (!mark) continue;
 
 			const cx = mark.x * W;
@@ -333,7 +280,7 @@ class VideoManager {
 			return { x: from.x + dx * t, y: from.y + dy * t };
 		}
 
-		const marks = this.videoState.marks;
+		const marks = this.videoState.refObjMarks;
 
 		for (let axis = 0; axis < 3; axis++) {
 			const edges = AXIS_EDGES[axis];
@@ -424,10 +371,10 @@ class VideoManager {
 		
 		ctx.clearRect(0, 0, W, H);
 		if (!pos) return;
-		if (this.videoState.marks[this.selectedCorner] !== null) return;
+		if (this.videoState.refObjMarks[this.selectedCorner] !== null) return;
 
 		// x-axis
-		const pointx = this.videoState.marks[this.selectedCorner ^ 1];
+		const pointx = this.videoState.refObjMarks[this.selectedCorner ^ 1];
 		if (pointx) {
 			ctx.beginPath();
 			ctx.moveTo(pos.x * W, pos.y * H);
@@ -438,7 +385,7 @@ class VideoManager {
 		}
 
 		// y-axis
-		const pointy = this.videoState.marks[this.selectedCorner ^ 2];
+		const pointy = this.videoState.refObjMarks[this.selectedCorner ^ 2];
 		if (pointy) {
 			ctx.beginPath();
 			ctx.moveTo(pos.x * W, pos.y * H);
@@ -449,7 +396,7 @@ class VideoManager {
 		}
 
 		// z-axis
-		const pointz = this.videoState.marks[this.selectedCorner ^ 4];
+		const pointz = this.videoState.refObjMarks[this.selectedCorner ^ 4];
 		if (pointz) {
 			ctx.beginPath();
 			ctx.moveTo(pos.x * W, pos.y * H);
@@ -463,7 +410,7 @@ class VideoManager {
 	private deleteMarkAtPos(pos: Point2D): void {
 		const S = this.panZoom.OVERLAY_SCALE;
 
-		this.videoState.marks.forEach((mark, index) => {
+		this.videoState.refObjMarks.forEach((mark, index) => {
 			if (!mark) return;
 
 			const dotRadiusPx = this.dotRadius * 1.5 * S;
@@ -480,7 +427,7 @@ class VideoManager {
 	}
 
 	private deleteMark(index: number) {
-		this.videoState.marks[index] = null;
+		this.videoState.refObjMarks[index] = null;
 		this.drawMarks();
 	}
 }
@@ -636,9 +583,7 @@ class Ref3DWidget {
 	}
 }
 
-class RefObjMarker {
-	private fileCache: Map<string, { file: File; timestamps: number[] }> = new Map();
-
+export class RefObjMarker {
 	private cardA = document.getElementById("ref-corner-A") as HTMLDivElement;
 	private cardB = document.getElementById("ref-corner-B") as HTMLDivElement;
 	private markedCountA = this.cardA.querySelector(".marked-count") as HTMLParagraphElement;
@@ -647,18 +592,36 @@ class RefObjMarker {
 	private cornerStatusesB = this.cardB.querySelectorAll<HTMLDivElement>(".corner-status");
 
 
-	private stateA = new VideoState();
-	private stateB = new VideoState();
+	private stateA: VideoState;
+	private stateB: VideoState;
 	private activeState: 'a' | 'b' = 'a';
 
-	private refMarkerVideo = new VideoManager(this.stateA);
+	private refMarkerVideo: VideoManager;
 
     private widget = new Ref3DWidget();
 	private cornerBtn = document.querySelectorAll<HTMLButtonElement>(".corner-btn");
 	private vidABtn = document.getElementById("vid-btn-a") as HTMLButtonElement;
 	private vidBBtn = document.getElementById("vid-btn-b") as HTMLButtonElement;
 
-    constructor() {
+    constructor(states:  VideoState[]) {
+		[this.stateA, this.stateB] = states;
+		states.forEach(s => s.onChange = () => {
+			this.syncButtonStates();
+			this.selectVideo('a');
+		});
+		this.refMarkerVideo = new VideoManager(this.stateA);
+
+		document.getElementById("open-refObjMarker")!.addEventListener("click", () => {
+			document.querySelector(".RefObjMarker")!.classList.add("active");
+			document.getElementById("loading-screen")!.classList.add("show");
+		});
+
+		document.getElementById("close-refObjMarker")!.addEventListener("click", () => {
+			document.querySelector(".RefObjMarker")!.classList.remove("active");
+			document.getElementById("loading-screen")!.classList.remove("show");
+			this.updateMain();
+		});
+
 		this.cornerBtn.forEach((btn,idx) => {
 			btn.addEventListener('click', () => {
 				this.selectCorner(idx);
@@ -671,50 +634,6 @@ class RefObjMarker {
 		this.vidBBtn.addEventListener('click', () => this.selectVideo('b'));
 		this.vidBBtn.setAttribute("disabled", "true");
 		this.vidBBtn.classList.add("disabled");
-	}
-
-	public updateVideo(files: File[], frameTimestamps: number[][]) {
-		const incoming = new Map<string, { file: File; timestamps: number[] }>();
-		files.forEach((f, i) => {
-			incoming.set(f.name, { file: f, timestamps: frameTimestamps[i] ?? [] });
-		});
-
-		// Sync cache
-		for (const name of this.fileCache.keys()) {
-			if (!incoming.has(name)) this.fileCache.delete(name);
-		}
-		for (const [name, data] of incoming) {
-			this.fileCache.set(name, data);
-		}
-
-		const aStillPresent = this.stateA.file.name !== "" && this.fileCache.has(this.stateA.file.name);
-		const bStillPresent = this.stateB.file.name !== "" && this.fileCache.has(this.stateB.file.name);
-
-		const bStateSnapshot = bStillPresent ? { currentTime: this.stateB.currentTime,  marks: this.stateB.marks}: null;
-
-		if (!aStillPresent) this.stateA.reset();
-		if (!bStillPresent) this.stateB.reset();
-
-		// Shift B -> A
-		if (!this.stateA.hasVideo && this.stateB.hasVideo && bStateSnapshot) {
-			this.stateA.updateVideo(this.stateB.file, this.stateB.frameTimestamps, bStateSnapshot.currentTime, bStateSnapshot.marks);
-			this.stateB.reset();
-		}
-
-		const newFiles = [...this.fileCache.values()].filter(
-			d => d.file.name !== this.stateA.file.name && d.file.name !== this.stateB.file.name
-		);
-		for (const data of newFiles) {
-			if (!this.stateA.hasVideo) {
-				this.stateA.updateVideo(data.file, data.timestamps);
-			} else if (!this.stateB.hasVideo) {
-				this.stateB.updateVideo(data.file, data.timestamps);
-			}
-		}
-
-		this.syncButtonStates();
-		this.selectVideo('a');
-		this.updateMain();
 	}
 
 	private syncButtonStates(): void {
@@ -761,13 +680,14 @@ class RefObjMarker {
 	}
 
 	public updateMain() {
+		this.stateA.onChange?.();
+		this.stateB.onChange?.();
 		this.updateCard();
-		apTracker.updateReferenceCorners([this.stateA.marks, this.stateB.marks]);
 	}
 
 	private updateCard() {
-		const countA = this.stateA.marks.filter(m => m !== null).length;
-		const countB = this.stateB.marks.filter(m => m !== null).length;
+		const countA = this.stateA.refObjMarks.filter(m => m !== null).length;
+		const countB = this.stateB.refObjMarks.filter(m => m !== null).length;
 		this.markedCountA.textContent = `${countA} corner${countA !== 1 ? 's' : ''} marked`;
 		this.markedCountB.textContent = `${countB} corner${countB !== 1 ? 's' : ''} marked`;
 
@@ -786,44 +706,18 @@ class RefObjMarker {
 		}
 
 		this.cornerStatusesA.forEach((el, idx) => {
-			if (this.stateA.marks[idx]) {
+			if (this.stateA.refObjMarks[idx]) {
 				el.classList.add("done");
 			} else {
 				el.classList.remove("done");
 			}
 		});
 		this.cornerStatusesB.forEach((el, idx) => {
-			if (this.stateB.marks[idx]) {
+			if (this.stateB.refObjMarks[idx]) {
 				el.classList.add("done");
 			} else {
 				el.classList.remove("done");
 			}
 		});
 	}
-
-	public imported(videos: File[], frameTimestamps: number[][], trimStates: (number|null)[], referenceCorners: (Point2D | null)[][]) {
-		if (videos[0]) {
-			this.stateA.updateVideo(videos[0], frameTimestamps[0]);
-		}
-		if (videos[1]) {
-			this.stateB.updateVideo(videos[1], frameTimestamps[1]);
-		}
-		if (trimStates[0] !== null && trimStates[1] !== null) {
-			this.stateA.updateTrim(trimStates[0]!, trimStates[1]!);
-		}
-		if (trimStates[2] !== null && trimStates[3] !== null) {
-			this.stateB.updateTrim(trimStates[2]!, trimStates[3]!);
-		}
-		if (referenceCorners[0]) {
-			this.stateA.marks = referenceCorners[0];
-		}
-		if (referenceCorners[1]) {
-			this.stateB.marks = referenceCorners[1];
-		}
-		this.syncButtonStates();
-		this.selectVideo('a');
-		this.updateCard();
-	}
 }
-
-export let refObjMarker = new RefObjMarker();

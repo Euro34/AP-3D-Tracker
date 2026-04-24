@@ -1,4 +1,4 @@
-.card#RefCorner .card-header .right button {
+.card#RefObj .card-header .right button {
     padding: 5px 15px;
     border: 1px solid var(--link-border-color);
     border-radius: 5px;
@@ -8,18 +8,18 @@
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.card#RefCorner .card-header .right button:hover {
+.card#RefObj .card-header .right button:hover {
     background-color: var(--link-border-color);
 }
 
-.card#RefCorner .card-content {
+.card#RefObj .card-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
     width: 100%;
     gap: 20px;
 }
 
-.card#RefCorner .camera {
+.card#RefObj .camera {
 	display: flex;
     flex-direction: column;
     width: 100%;
@@ -29,15 +29,15 @@
     gap: 20px;
 }
 
-.card#RefCorner .camera.inprogress {
+.card#RefObj .camera.inprogress {
 	border-color: var(--warning-color);
 }
 
-.card#RefCorner .camera.done {
+.card#RefObj .camera.done {
 	border-color: var(--success-color);
 }
 
-.card#RefCorner .camera .head {
+.card#RefObj .camera .head {
 	display: flex;
 	justify-content: space-between;
 	padding: 0 3px;

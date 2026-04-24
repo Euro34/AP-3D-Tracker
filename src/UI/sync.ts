@@ -1,5 +1,3 @@
-import { apTracker } from "../main";
-
 // Card
 document.getElementById("open-sync-editor")!.addEventListener("click", () => {
 	document.querySelector(".SyncEditor")!.classList.add("active");
@@ -621,8 +619,6 @@ class SyncEditor {
 	}
 
 	private updateMain() {
-		apTracker.updateSync(this.getTrimState());
-
 		if (this.videoA.hasVideo) {
 			const startATime = this.videoA.timeAtFrame(this.videoA.startFrame);
 			const endATime = this.videoA.timeAtFrame(this.videoA.endFrame);
