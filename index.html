@@ -23,7 +23,7 @@
         <link rel="stylesheet" href="src/assets/css/upload.css">
         <link rel="stylesheet" href="src/assets/css/sync.css">
         <link rel="stylesheet" href="src/assets/css/reference_object_dimension.css">
-        <link rel="stylesheet" href="src/assets/css/reference_object_marker.css">
+        <link rel="stylesheet" href="src/assets/css/reference_marker.css">
 
         <!-- Title -->
         <title>AP Tracker</title>
@@ -68,7 +68,7 @@
                     </div>
                 </div>
                 <div class="connector"></div>
-                <div class="step" id="RefCorner">
+                <div class="step" id="RefMarks">
                     <div class="step-num">4</div>
                     <div class="step-text">
                         <h4 class="step-title">Mark reference corners</h4>
@@ -76,7 +76,7 @@
                     </div>
                 </div>
                 <div class="connector"></div>
-                <div class="step" id="TargetObj">
+                <div class="step" id="TargetMarks">
                     <div class="step-num">5</div>
                     <div class="step-text">
                         <h4 class="step-title">Mark target object</h4>
@@ -222,14 +222,14 @@
                         <div id="refObjDiagram"></div>
                     </div>
                 </div>
-                <div class="card" id="RefCorner">
+                <div class="card" id="RefMarks">
                     <div class="card-header">
                         <div class="left">
                             <div class="card-number">4</div>
                             <h3 class="card-title">Mark reference object corners</h3>
                         </div>
                         <div class="right">
-                            <button id="open-refObjMarker">Reference Object Marker</button>
+                            <button id="open-referenceMarker">Reference Object Marker</button>
                         </div>
                     </div>
                     <div class="description">
@@ -270,7 +270,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card" id="TargetObj">
+                <div class="card" id="TargetMarks">
                     <div class="card-header">
                         <div class="left">
                             <div class="card-number">5</div>
@@ -299,11 +299,11 @@
                             <div class="dot"></div>
                             <p>Reference object dimensions</p>
                         </div>
-                        <div class="item" id="RefCorner">
+                        <div class="item" id="RefMarks">
                             <div class="dot"></div>
                             <p>Mark reference object corners</p>
                         </div>
-                        <div class="item" id="TargetObj">
+                        <div class="item" id="TargetMarks">
                             <div class="dot"></div>
                             <p>Mark target object</p>
                         </div>
@@ -445,19 +445,19 @@
             <button id="match-duration">Match duration</button>
         </div>
     </div>
-    <div class="RefObjMarker" id="RefObjMarker">
+    <div class="ReferenceMarker" id="ReferenceMarker">
         <div class="toolbar">
             <div class="toolbar-left">
                 <img id="logo" src="AP_Logo.svg" alt="AP Tracker Logo">
                 <h1>Reference Object Marker</h1>
             </div>
             <div class="toolbar-right">
-                <button id="close-refObjMarker"><img src="src/assets/glyph/cross.svg" alt="Close"></button>
+                <button id="close-referenceMarker"><img src="src/assets/glyph/cross.svg" alt="Close"></button>
                 <button id="info"><img id="info-icon" src="src/assets/glyph/info.svg" alt="Info"></button>
             </div>
         </div>
         <div class="content">
-            <div class="sidebar" id="refObjMarker-sidebar">
+            <div class="sidebar" id="referenceMarker-sidebar">
                 <div class="ref-3d-widget" id="ref-3d-widget"></div>
 
                 <div class="corner-selector" id="corner-selector">

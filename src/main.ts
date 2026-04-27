@@ -123,11 +123,11 @@ class APTracker {
         });
 
         if (markedCount[0] >= 6 && markedCount[1] >= 6) {
-            updateStatus("RefCorner", "done");
+            updateStatus("RefMarks", "done");
         } else if (markedCount[0] > 0 || markedCount[1] > 0) {
-            updateStatus("RefCorner", "inprogress");
+            updateStatus("RefMarks", "inprogress");
         } else {
-            updateStatus("RefCorner", "");
+            updateStatus("RefMarks", "");
         }
     }
 

@@ -612,13 +612,13 @@ export class ReferenceMarker {
 		});
 		this.refMarkerVideo = new VideoManager(this.stateA);
 
-		document.getElementById("open-refObjMarker")!.addEventListener("click", () => {
-			document.querySelector(".RefObjMarker")!.classList.add("active");
+		document.getElementById("open-referenceMarker")!.addEventListener("click", () => {
+			document.querySelector(".ReferenceMarker")!.classList.add("active");
 			document.getElementById("loading-screen")!.classList.add("show");
 		});
 
-		document.getElementById("close-refObjMarker")!.addEventListener("click", () => {
-			document.querySelector(".RefObjMarker")!.classList.remove("active");
+		document.getElementById("close-referenceMarker")!.addEventListener("click", () => {
+			document.querySelector(".ReferenceMarker")!.classList.remove("active");
 			document.getElementById("loading-screen")!.classList.remove("show");
 			this.updateCard();
 		});
