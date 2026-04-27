@@ -18,8 +18,8 @@
 
         <!-- Title -->
         <title>AP Tracker</title>
-      <script type="module" crossorigin src="/APTracker/assets/index-A2vmaw-1.js"></script>
-      <link rel="stylesheet" crossorigin href="/APTracker/assets/index-f-ooZyQZ.css">
+      <script type="module" crossorigin src="/APTracker/assets/index-DWKjdvYn.js"></script>
+      <link rel="stylesheet" crossorigin href="/APTracker/assets/index-C6foZQb0.css">
     </head>
     <body>
         <div class="toolbar">
@@ -61,7 +61,7 @@
                     </div>
                 </div>
                 <div class="connector"></div>
-                <div class="step" id="RefCorner">
+                <div class="step" id="RefMarks">
                     <div class="step-num">4</div>
                     <div class="step-text">
                         <h4 class="step-title">Mark reference corners</h4>
@@ -69,7 +69,7 @@
                     </div>
                 </div>
                 <div class="connector"></div>
-                <div class="step" id="TargetObj">
+                <div class="step" id="TargetMarks">
                     <div class="step-num">5</div>
                     <div class="step-text">
                         <h4 class="step-title">Mark target object</h4>
@@ -215,14 +215,14 @@
                         <div id="refObjDiagram"></div>
                     </div>
                 </div>
-                <div class="card" id="RefCorner">
+                <div class="card" id="RefMarks">
                     <div class="card-header">
                         <div class="left">
                             <div class="card-number">4</div>
                             <h3 class="card-title">Mark reference object corners</h3>
                         </div>
                         <div class="right">
-                            <button id="open-refObjMarker">Reference Object Marker</button>
+                            <button id="open-referenceMarker">Reference Object Marker</button>
                         </div>
                     </div>
                     <div class="description">
@@ -263,7 +263,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card" id="TargetObj">
+                <div class="card" id="TargetMarks">
                     <div class="card-header">
                         <div class="left">
                             <div class="card-number">5</div>
@@ -292,11 +292,11 @@
                             <div class="dot"></div>
                             <p>Reference object dimensions</p>
                         </div>
-                        <div class="item" id="RefCorner">
+                        <div class="item" id="RefMarks">
                             <div class="dot"></div>
                             <p>Mark reference object corners</p>
                         </div>
-                        <div class="item" id="TargetObj">
+                        <div class="item" id="TargetMarks">
                             <div class="dot"></div>
                             <p>Mark target object</p>
                         </div>
@@ -438,19 +438,19 @@
             <button id="match-duration">Match duration</button>
         </div>
     </div>
-    <div class="RefObjMarker" id="RefObjMarker">
+    <div class="ReferenceMarker" id="ReferenceMarker">
         <div class="toolbar">
             <div class="toolbar-left">
                 <img id="logo" src="AP_Logo.svg" alt="AP Tracker Logo">
                 <h1>Reference Object Marker</h1>
             </div>
             <div class="toolbar-right">
-                <button id="close-refObjMarker"><img src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20width='800px'%20height='800px'%20viewBox='0%200%2024%2024'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M19%205L4.99998%2019M5.00001%205L19%2019'%20stroke='%23000000'%20stroke-width='1.5'%20stroke-linecap='round'%20stroke-linejoin='round'/%3e%3c/svg%3e" alt="Close"></button>
+                <button id="close-referenceMarker"><img src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20width='800px'%20height='800px'%20viewBox='0%200%2024%2024'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M19%205L4.99998%2019M5.00001%205L19%2019'%20stroke='%23000000'%20stroke-width='1.5'%20stroke-linecap='round'%20stroke-linejoin='round'/%3e%3c/svg%3e" alt="Close"></button>
                 <button id="info"><img id="info-icon" src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='UTF-8'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20width='100%25'%20height='100%25'%20viewBox='0%200%20800%20800'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20xml:space='preserve'%20xmlns:serif='http://www.serif.com/'%20style='fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;'%3e%3cpath%20d='M399,607.248c15.001,0%2027.163,-12.162%2027.163,-27.163l0,-217.302c0,-15.001%20-12.162,-27.163%20-27.163,-27.163c-15.001,0%20-27.163,12.162%20-27.163,27.163l0,217.302c0,15.001%2012.162,27.163%2027.163,27.163Z'%20style='fill-rule:nonzero;'/%3e%3cpath%20d='M399,217.915c20.003,0%2036.217,16.215%2036.217,36.217c0,20.002%20-16.214,36.217%20-36.217,36.217c-20.003,0%20-36.217,-16.215%20-36.217,-36.217c0,-20.002%2016.214,-36.217%2036.217,-36.217Z'%20style='fill-rule:nonzero;'/%3e%3cpath%20d='M9.667,399c0,-215.023%20174.311,-389.333%20389.333,-389.333c215.024,0%20389.333,174.311%20389.333,389.333c0,215.024%20-174.309,389.333%20-389.333,389.333c-215.023,0%20-389.333,-174.309%20-389.333,-389.333Zm389.333,-335.008c-185.02,0%20-335.008,149.988%20-335.008,335.008c0,185.018%20149.988,335.008%20335.008,335.008c185.018,0%20335.008,-149.989%20335.008,-335.008c0,-185.02%20-149.989,-335.008%20-335.008,-335.008Z'/%3e%3c/svg%3e" alt="Info"></button>
             </div>
         </div>
         <div class="content">
-            <div class="sidebar" id="refObjMarker-sidebar">
+            <div class="sidebar" id="referenceMarker-sidebar">
                 <div class="ref-3d-widget" id="ref-3d-widget"></div>
 
                 <div class="corner-selector" id="corner-selector">
